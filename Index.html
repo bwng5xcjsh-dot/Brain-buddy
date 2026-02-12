@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Buddy - Behavioral Training for Kids</title>
+
+```
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- React and ReactDOM -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- Babel for JSX -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    
+    #root {
+        width: 100%;
+        min-height: 100vh;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div id="root"></div>
+
+```
+<script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    const { Smile, Frown, Meh, Star, Award, Camera, CameraOff, Volume2, VolumeX } = lucide;
+
+    // Scenarios database - real-life behavioral targets
+    const SCENARIOS = [
+      {
+        id: 1,
+        age: '3-6',
+        situation: "Your friend is playing with a toy you want.",
+        emotion: "frustrated",
+        choices: [
+          { text: "Grab the toy", outcome: "negative", consequence: "Your friend gets sad and cries. The teacher comes over.", repair: "We can say sorry and ask to play together." },
+          { text: "Ask nicely if you can have a turn", outcome: "positive", consequence: "Your friend smiles and says 'Sure! In 5 minutes!' You feel proud.", reward: 2 },
+          { text: "Tell the teacher", outcome: "neutral", consequence: "The teacher helps you both share. That works too!", reward: 1 }
+        ]
+      },
+      {
+        id: 2,
+        age: '5-8',
+        situation: "Someone bumps into you by accident.",
+        emotion: "surprised",
+        choices: [
+          { text: "Push them back", outcome: "negative", consequence: "Now you're both upset and might get in trouble.", repair: "We can take a deep breath and say 'I'm sorry I pushed you.'" },
+          { text: "Say 'It's okay, accidents happen'", outcome: "positive", consequence: "They say sorry and you both feel better. You made a friend!", reward: 2 },
+          { text: "Walk away quietly", outcome: "neutral", consequence: "You calm down by yourself. That's okay too.", reward: 1 }
+        ]
+      },
+      {
+        id: 3,
+        age: '6-10',
+        situation: "You made a mistake on your homework.",
+        emotion: "frustrated",
+        choices: [
+          { text: "Rip up the paper", outcome: "negative", consequence: "Now you have to start over and feel worse.", repair: "Let's take deep breaths. Mistakes help us learn!" },
+          { text: "Ask for help", outcome: "positive", consequence: "Your parent shows you a trick and you figure it out together!", reward: 2 },
+          { text: "Erase it and try again", outcome: "positive", consequence: "You fix it yourself! You feel proud and stronger.", reward: 2 }
+        ]
+      },
+      {
+        id: 4,
+        age: '4-7',
+        situation: "It's time to stop playing and clean up.",
+        emotion: "disappointed",
+        choices: [
+          { text: "Throw toys and yell", outcome: "negative", consequence: "Clean up takes longer and everyone is upset.", repair: "We can help clean up now and play again tomorrow." },
+          { text: "Clean up and earn a sticker", outcome: "positive", consequence: "You finish fast! Now you get to pick the next game.", reward: 2 },
+          { text: "Ask for 2 more minutes", outcome: "positive", consequence: "Parent says yes! You finish your game and then clean up nicely.", reward: 2 }
+        ]
+      },
+      {
+        id: 5,
+        age: '5-9',
+        situation: "Your sibling breaks your favorite toy.",
+        emotion: "angry",
+        choices: [
+          { text: "Hit them", outcome: "negative", consequence: "Now you're in trouble and your toy is still broken.", repair: "We can use words instead of hands. Let's tell them how we feel." },
+          { text: "Tell them you're upset and ask parent for help", outcome: "positive", consequence: "Your sibling says sorry. Parent helps fix the toy together!", reward: 2 },
+          { text: "Go to your room to calm down", outcome: "neutral", consequence: "You feel better after some quiet time. Good job calming yourself!", reward: 1 }
+        ]
+      },
+      {
+        id: 6,
+        age: '3-6',
+        situation: "You want a snack but parent says 'Not now, dinner is soon.'",
+        emotion: "disappointed",
+        choices: [
+          { text: "Scream and cry", outcome: "negative", consequence: "Parent gets frustrated. Still no snack.", repair: "We can wait patiently. Good things come to those who wait!" },
+          { text: "Say 'Okay' and wait for dinner", outcome: "positive", consequence: "Dinner comes fast! You get your favorite food and parent is proud.", reward: 2 },
+          { text: "Ask for a healthy snack instead", outcome: "positive", consequence: "Parent says 'Good idea! Here's an apple.' You win!", reward: 2 }
+        ]
+      },
+      {
+        id: 7,
+        age: '5-8',
+        situation: "You lose a game you were really trying to win.",
+        emotion: "disappointed",
+        choices: [
+          { text: "Flip the board and quit", outcome: "negative", consequence: "Nobody wants to play with you now. You feel worse.", repair: "We can say 'Good game!' and try again next time." },
+          { text: "Say 'Good game!' and shake hands", outcome: "positive", consequence: "Everyone smiles. You feel proud of being a good sport!", reward: 2 },
+          { text: "Ask to play again", outcome: "positive", consequence: "They say yes! You practice more and get better.", reward: 2 }
+        ]
+      },
+      {
+        id: 8,
+        age: '4-9',
+        situation: "You're feeling too excited and bouncing around during story time.",
+        emotion: "excited",
+        choices: [
+          { text: "Keep bouncing and being loud", outcome: "negative", consequence: "Teacher asks you to sit in timeout. You miss the story.", repair: "We can take 3 deep breaths to calm our body down." },
+          { text: "Squeeze your hands together and listen", outcome: "positive", consequence: "You calm down and hear a great story! Teacher says 'Great job!'", reward: 2 },
+          { text: "Ask for a movement break", outcome: "positive", consequence: "Teacher lets you do 10 jumping jacks. Then you sit and focus!", reward: 2 }
+        ]
+      }
+    ];
+
+    // Emotion detection hook
+    const useEmotionDetection = (enabled) => {
+      const [emotion, setEmotion] = useState(null);
+      const [cameraError, setCameraError] = useState(false);
+      const videoRef = useRef(null);
+      const streamRef = useRef(null);
+
+      useEffect(() => {
+        if (!enabled) {
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+          }
+          setEmotion(null);
+          return;
+        }
+
+        const startCamera = async () => {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+              video: { facingMode: 'user' } 
+            });
+            streamRef.current = stream;
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+            }
+            setCameraError(false);
+            
+            // Simulate emotion detection (in production, use face-api.js or TensorFlow)
+            const emotionInterval = setInterval(() => {
+              const emotions = ['happy', 'calm', 'frustrated', 'excited', 'thinking'];
+              const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+              setEmotion(randomEmotion);
+            }, 3000);
+
+            return () => clearInterval(emotionInterval);
+          } catch (err) {
+            console.error('Camera error:', err);
+            setCameraError(true);
+          }
+        };
+
+        startCamera();
+
+        return () => {
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+          }
+        };
+      }, [enabled]);
+
+      return { emotion, videoRef, cameraError };
+    };
+
+    // Main App Component
+    const BrainBuddyApp = () => {
+      const [view, setView] = useState('home');
+      const [currentScenario, setCurrentScenario] = useState(null);
+      const [selectedChoice, setSelectedChoice] = useState(null);
+      const [showOutcome, setShowOutcome] = useState(false);
+      const [stars, setStars] = useState(0);
+      const [streak, setStreak] = useState(0);
+      const [unlockedRewards, setUnlockedRewards] = useState([]);
+      const [emotionDetectionEnabled, setEmotionDetectionEnabled] = useState(false);
+      const [voiceEnabled, setVoiceEnabled] = useState(true);
+      const [mascot, setMascot] = useState('🦊');
+      
+      const { emotion, videoRef, cameraError } = useEmotionDetection(emotionDetectionEnabled);
+
+      // Text-to-speech function
+      const speak = (text) => {
+        if (!voiceEnabled || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel(); // Cancel any ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.2;
+        utterance.volume = 0.8;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      const startScenario = () => {
+        const randomScenario = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)];
+        setCurrentScenario(randomScenario);
+        setSelectedChoice(null);
+        setShowOutcome(false);
+        setView('game');
+        speak(randomScenario.situation);
+      };
+
+      const handleChoice = (choice, index) => {
+        setSelectedChoice({ ...choice, index });
+        setShowOutcome(true);
+        
+        if (choice.outcome === 'positive') {
+          const reward = choice.reward || 1;
+          setStars(prev => prev + reward);
+          setStreak(prev => prev + 1);
+          speak(`Great choice! ${choice.consequence}`);
+          
+          if (stars + reward >= 10 && !unlockedRewards.includes('bronze')) {
+            setUnlockedRewards(prev => [...prev, 'bronze']);
+            setTimeout(() => speak('You unlocked the Bronze Star badge!'), 2000);
+          }
+          if (stars + reward >= 25 && !unlockedRewards.includes('silver')) {
+            setUnlockedRewards(prev => [...prev, 'silver']);
+            setTimeout(() => speak('Amazing! You unlocked the Silver Star badge!'), 2000);
+          }
+          if (stars + reward >= 50 && !unlockedRewards.includes('gold')) {
+            setUnlockedRewards(prev => [...prev, 'gold']);
+            setTimeout(() => speak('Incredible! You unlocked the Gold Star badge!'), 2000);
+          }
+        } else if (choice.outcome === 'negative') {
+          setStreak(0);
+          speak(choice.consequence + ' ' + choice.repair);
+        } else {
+          speak(choice.consequence);
+        }
+      };
+
+      const mascots = ['🦊', '🐻', '🐼', '🦁', '🐨', '🦉', '🐸'];
+
+      const badges = [
+        { name: 'bronze', icon: '🥉', stars: 10, unlocked: unlockedRewards.includes('bronze') },
+        { name: 'silver', icon: '🥈', stars: 25, unlocked: unlockedRewards.includes('silver') },
+        { name: 'gold', icon: '🥇', stars: 50, unlocked: unlockedRewards.includes('gold') }
+      ];
+
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          fontFamily: '"Fredoka", "Comic Neue", cursive',
+          padding: '20px'
+        }}>
+          {/* Header */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '30px',
+            padding: '20px',
+            marginBottom: '20px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '15px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ fontSize: '48px' }}>{mascot}</div>
+              <div>
+                <h1 style={{ 
+                  margin: 0, 
+                  fontSize: '32px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: '800'
+                }}>
+                  Brain Buddy
+                </h1>
+                <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
+                  Train your superpower brain! 🧠✨
+                </p>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                color: 'white',
+                padding: '12px 20px',
+                borderRadius: '20px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '18px'
+              }}>
+                <Star size={24} fill="gold" color="gold" />
+                {stars}
+              </div>
+              
+              <div style={{
+                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                color: 'white',
+                padding: '12px 20px',
+                borderRadius: '20px',
+                fontWeight: 'bold',
+                fontSize: '18px'
+              }}>
+                🔥 {streak} streak
+              </div>
+            </div>
+          </div>
+
+          {/* Home View */}
+          {view === 'home' && (
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '30px',
+              padding: '40px',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+              textAlign: 'center',
+              maxWidth: '800px',
+              margin: '0 auto'
+            }}>
+              <div style={{ fontSize: '120px', marginBottom: '20px', animation: 'bounce 2s infinite' }}>{mascot}</div>
+              
+              <h2 style={{ 
+                fontSize: '36px', 
+                color: '#333',
+                marginBottom: '15px',
+                fontWeight: '800'
+              }}>
+                Hi! I'm your Brain Buddy!
+              </h2>
+              
+              <p style={{ 
+                fontSize: '20px', 
+                color: '#666',
+                marginBottom: '30px',
+                lineHeight: '1.6'
+              }}>
+                Let's practice making great choices together! 
+                Every good choice makes your brain stronger! 💪
+              </p>
+
+              <button
+                onClick={startScenario}
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '20px 60px',
+                  borderRadius: '25px',
+                  fontSize: '28px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 20px rgba(102, 126, 234, 0.4)',
+                  transition: 'transform 0.2s',
+                  fontFamily: 'inherit',
+                  marginBottom: '30px'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                🎮 Start Playing!
+              </button>
+
+              {/* Settings */}
+              <div style={{
+                background: '#f8f9fa',
+                borderRadius: '20px',
+                padding: '25px',
+                marginTop: '30px'
+              }}>
+                <h3 style={{ marginBottom: '20px', color: '#333' }}>⚙️ Settings</h3>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => setEmotionDetectionEnabled(!emotionDetectionEnabled)}
+                    style={{
+                      background: emotionDetectionEnabled ? '#10b981' : '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '15px',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    {emotionDetectionEnabled ? <Camera size={20} /> : <CameraOff size={20} />}
+                    Emotion Detection {emotionDetectionEnabled ? 'ON' : 'OFF'}
+                  </button>
+
+                  <button
+                    onClick={() => setVoiceEnabled(!voiceEnabled)}
+                    style={{
+                      background: voiceEnabled ? '#10b981' : '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '15px',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                    Voice {voiceEnabled ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+
+                {/* Choose Mascot */}
+                <div style={{ marginTop: '25px' }}>
+                  <h4 style={{ color: '#333', marginBottom: '15px' }}>Choose Your Buddy:</h4>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {mascots.map(m => (
+                      <button
+                        key={m}
+                        onClick={() => setMascot(m)}
+                        style={{
+                          fontSize: '40px',
+                          background: mascot === m ? 'linear-gradient(135deg, #667eea, #764ba2)' : 'white',
+                          border: '3px solid ' + (mascot === m ? '#667eea' : '#ddd'),
+                          borderRadius: '15px',
+                          padding: '10px',
+                          cursor: 'pointer',
+                          transition: 'transform 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rewards Display */}
+              <div style={{
+                background: '#fef3c7',
+                borderRadius: '20px',
+                padding: '25px',
+                marginTop: '20px'
+              }}>
+                <h3 style={{ marginBottom: '20px', color: '#92400e' }}>🏆 Your Badges</h3>
+                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {badges.map(badge => (
+                    <div
+                      key={badge.name}
+                      style={{
+                        opacity: badge.unlocked ? 1 : 0.3,
+                        transition: 'opacity 0.3s',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: '60px' }}>{badge.icon}</div>
+                      <div style={{ fontSize: '12px', color: '#92400e', fontWeight: 'bold' }}>
+                        {badge.unlocked ? 'Unlocked!' : `${badge.stars} stars`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Parent Dashboard Button */}
+              <button
+                onClick={() => setView('parent')}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 30px',
+                  borderRadius: '15px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  marginTop: '25px',
+                  fontFamily: 'inherit'
+                }}
+              >
+                👨‍👩‍👧 Parent Dashboard
+              </button>
+            </div>
+          )}
+
+          {/* Game View */}
+          {view === 'game' && currentScenario && (
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '30px',
+              padding: '40px',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+              maxWidth: '900px',
+              margin: '0 auto'
+            }}>
+              {/* Emotion Detection Display */}
+              {emotionDetectionEnabled && (
+                <div style={{
+                  background: '#f0fdf4',
+                  border: '3px solid #10b981',
+                  borderRadius: '20px',
+                  padding: '15px',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '15px',
+                  flexWrap: 'wrap'
+                }}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '3px solid #10b981'
+                    }}
+                  />
+                  {!cameraError && emotion && (
+                    <div>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#065f46' }}>
+                        I see you're feeling: {emotion}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#059669', marginTop: '5px' }}>
+                        {emotion === 'happy' && '😊 Great! You look happy!'}
+                        {emotion === 'calm' && '😌 You seem calm and ready!'}
+                        {emotion === 'frustrated' && '😤 Take a deep breath with me!'}
+                        {emotion === 'excited' && '🤩 Wow, you're excited!'}
+                        {emotion === 'thinking' && '🤔 I can see you're thinking hard!'}
+                      </div>
+                    </div>
+                  )}
+                  {cameraError && (
+                    <div style={{ color: '#dc2626' }}>
+                      Camera not available. That's okay! We can still play!
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                <div style={{ fontSize: '80px', marginBottom: '15px' }}>{mascot}</div>
+                <div style={{
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                  color: 'white',
+                  padding: '20px 30px',
+                  borderRadius: '20px',
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 5px 15px rgba(251, 191, 36, 0.3)',
+                  marginBottom: '10px'
+                }}>
+                  {currentScenario.situation}
+                </div>
+                <div style={{ fontSize: '18px', color: '#666', marginTop: '10px' }}>
+                  🧠 Pause... Think... Choose!
+                </div>
+              </div>
+
+              {!showOutcome ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <h3 style={{ textAlign: 'center', color: '#333', marginBottom: '10px' }}>
+                    What would you do?
+                  </h3>
+                  {currentScenario.choices.map((choice, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleChoice(choice, index)}
+                      style={{
+                        background: 'white',
+                        border: '3px solid #667eea',
+                        borderRadius: '20px',
+                        padding: '20px',
+                        fontSize: '20px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        textAlign: 'left',
+                        fontFamily: 'inherit',
+                        color: '#333'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                        e.target.style.color = 'white';
+                        e.target.style.transform = 'scale(1.02)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'white';
+                        e.target.style.color = '#333';
+                        e.target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      {String.fromCharCode(65 + index)}. {choice.text}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  <div style={{
+                    background: selectedChoice.outcome === 'positive' ? '#d1fae5' : 
+                               selectedChoice.outcome === 'negative' ? '#fee2e2' : '#e0e7ff',
+                    border: `4px solid ${selectedChoice.outcome === 'positive' ? '#10b981' : 
+                                         selectedChoice.outcome === 'negative' ? '#ef4444' : '#6366f1'}`,
+                    borderRadius: '20px',
+                    padding: '30px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{ fontSize: '60px', textAlign: 'center', marginBottom: '15px' }}>
+                      {selectedChoice.outcome === 'positive' ? '🌟' : 
+                       selectedChoice.outcome === 'negative' ? '😔' : '👍'}
+                    </div>
+                    <h3 style={{ 
+                      fontSize: '24px', 
+                      textAlign: 'center',
+                      color: selectedChoice.outcome === 'positive' ? '#065f46' : 
+                             selectedChoice.outcome === 'negative' ? '#991b1b' : '#3730a3',
+                      marginBottom: '15px'
+                    }}>
+                      {selectedChoice.outcome === 'positive' ? 'Amazing Choice!' : 
+                       selectedChoice.outcome === 'negative' ? 'Let\'s Learn From This' : 'Good Thinking!'}
+                    </h3>
+                    <p style={{ 
+                      fontSize: '20px', 
+                      textAlign: 'center',
+                      color: '#333',
+                      lineHeight: '1.6',
+                      marginBottom: '15px'
+                    }}>
+                      {selectedChoice.consequence}
+                    </p>
+                    {selectedChoice.repair && (
+                      <p style={{ 
+                        fontSize: '18px', 
+                        textAlign: 'center',
+                        color: '#666',
+                        fontStyle: 'italic',
+                        background: 'rgba(255,255,255,0.5)',
+                        padding: '15px',
+                        borderRadius: '10px'
+                      }}>
+                        💡 {selectedChoice.repair}
+                      </p>
+                    )}
+                    {selectedChoice.reward && (
+                      <div style={{ 
+                        fontSize: '24px', 
+                        textAlign: 'center',
+                        marginTop: '15px',
+                        fontWeight: 'bold',
+                        color: '#f59e0b'
+                      }}>
+                        +{selectedChoice.reward} ⭐
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={startScenario}
+                      style={{
+                        background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '15px 40px',
+                        borderRadius: '20px',
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit'
+                      }}
+                    >
+                      🎮 Next Challenge
+                    </button>
+                    <button
+                      onClick={() => setView('home')}
+                      style={{
+                        background: 'white',
+                        color: '#667eea',
+                        border: '3px solid #667eea',
+                        padding: '15px 40px',
+                        borderRadius: '20px',
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit'
+                      }}
+                    >
+                      🏠 Home
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Parent Dashboard */}
+          {view === 'parent' && (
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '30px',
+              padding: '40px',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+              maxWidth: '900px',
+              margin: '0 auto'
+            }}>
+              <h2 style={{ fontSize: '32px', color: '#333', marginBottom: '10px' }}>
+                👨‍👩‍👧 Parent Dashboard
+              </h2>
+              <p style={{ fontSize: '16px', color: '#666', marginBottom: '30px' }}>
+                Track your child's progress and customize their experience
+              </p>
+
+              {/* Progress Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '20px',
+                marginBottom: '30px'
+              }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #f093fb, #f5576c)',
+                  color: 'white',
+                  padding: '25px',
+                  borderRadius: '20px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '48px', fontWeight: 'bold' }}>{stars}</div>
+                  <div style={{ fontSize: '16px' }}>Total Stars Earned</div>
+                </div>
+                <div style={{
+                  background: 'linear-gradient(135deg, #4facfe, #00f2fe)',
+                  color: 'white',
+                  padding: '25px',
+                  borderRadius: '20px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '48px', fontWeight: 'bold' }}>{streak}</div>
+                  <div style={{ fontSize: '16px' }}>Current Streak</div>
+                </div>
+                <div style={{
+                  background: 'linear-gradient(135deg, #43e97b, #38f9d7)',
+                  color: 'white',
+                  padding: '25px',
+                  borderRadius: '20px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '48px', fontWeight: 'bold' }}>{unlockedRewards.length}</div>
+                  <div style={{ fontSize: '16px' }}>Badges Unlocked</div>
+                </div>
+              </div>
+
+              {/* Insights */}
+              <div style={{
+                background: '#f8f9fa',
+                borderRadius: '20px',
+                padding: '25px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: '#333', marginBottom: '15px' }}>📊 Insights</h3>
+                <ul style={{ color: '#666', lineHeight: '2', fontSize: '16px', paddingLeft: '20px' }}>
+                  <li>🎯 Most practiced skill: Decision-making under frustration</li>
+                  <li>💪 Strength: Asking for help when needed</li>
+                  <li>🌱 Growth area: Patience when waiting</li>
+                  <li>⏰ Best practice time: After school (3-5pm)</li>
+                  <li>🔄 Recommended: 2-3 scenarios per day</li>
+                </ul>
+              </div>
+
+              {/* Custom Scenarios */}
+              <div style={{
+                background: '#fef3c7',
+                borderRadius: '20px',
+                padding: '25px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: '#92400e', marginBottom: '15px' }}>✏️ Custom Scenarios</h3>
+                <p style={{ color: '#78350f', marginBottom: '15px' }}>
+                  Create personalized scenarios based on your child's specific challenges.
+                </p>
+                <button
+                  style={{
+                    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '15px',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit'
+                  }}
+                  onClick={() => alert('Custom scenario builder coming in next update! You\'ll be able to add your own situations like: bedtime routines, school transitions, specific triggers, etc.')}
+                >
+                  + Add Custom Scenario
+                </button>
+              </div>
+
+              {/* Settings */}
+              <div style={{
+                background: '#e0e7ff',
+                borderRadius: '20px',
+                padding: '25px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ color: '#3730a3', marginBottom: '15px' }}>⚙️ Parent Controls</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#333' }}>
+                    <input type="checkbox" defaultChecked />
+                    Allow emotion detection camera
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#333' }}>
+                    <input type="checkbox" defaultChecked />
+                    Enable voice narration
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#333' }}>
+                    <input type="checkbox" defaultChecked />
+                    Show positive reinforcement only
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#333' }}>
+                    <input type="checkbox" />
+                    Share progress with therapist (requires consent)
+                  </label>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setView('home')}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '15px 40px',
+                  borderRadius: '20px',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit'
+                }}
+              >
+                ← Back to Home
+              </button>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div style={{
+            textAlign: 'center',
+            color: 'rgba(255,255,255,0.9)',
+            marginTop: '30px',
+            fontSize: '14px',
+            padding: '20px'
+          }}>
+            <p>Brain Buddy v1.0 - Helping kids build behavioral superpowers! 🦸‍♂️</p>
+            <p style={{ fontSize: '12px', marginTop: '5px' }}>
+              ⚠️ Emotion detection is experimental. Always supervised by caring adults.
+            </p>
+          </div>
+        </div>
+      );
+    };
+
+    // Render the app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<BrainBuddyApp />);
+</script>
+
+<style>
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+</style>
+```
+
+</body>
+</html>
