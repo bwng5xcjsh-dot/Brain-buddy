@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F4F6F2;
+  --surface: #FDFDFB;
+  --surface-2: #E9EEE8;
+  --ink: #1B211D;
+  --ink-soft: #55605A;
+  --line: #D4DCD3;
+  --accent: #2E6B4F;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCE9E0;
+  --low: #A96E00;
+  --low-soft: #F3E7CC;
+  --out: #B3372E;
+  --out-soft: #F5DDD9;
+  --focus: #2E6B4F;
+  --shadow: 0 1px 2px rgba(27,33,29,.06), 0 4px 14px rgba(27,33,29,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141917;
+    --surface: #1D2420;
+    --surface-2: #242D28;
+    --ink: #E6EAE5;
+    --ink-soft: #97A49C;
+    --line: #313B35;
+    --accent: #5FA985;
+    --accent-ink: #10201A;
+    --accent-soft: #24352C;
+    --low: #D9A03C;
+    --low-soft: #3A3022;
+    --out: #E07168;
+    --out-soft: #40241F;
+    --focus: #5FA985;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141917;
+  --surface: #1D2420;
+  --surface-2: #242D28;
+  --ink: #E6EAE5;
+  --ink-soft: #97A49C;
+  --line: #313B35;
+  --accent: #5FA985;
+  --accent-ink: #10201A;
+  --accent-soft: #24352C;
+  --low: #D9A03C;
+  --low-soft: #3A3022;
+  --out: #E07168;
+  --out-soft: #40241F;
+  --focus: #5FA985;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.wordmark {
+  font-family: "Bricolage Grotesque", "IBM Plex Sans", sans-serif;
+  font-weight: 700; font-size: 28px; letter-spacing: -0.01em;
+}
+.wordmark span { color: var(--accent); }
+.tagline { color: var(--ink-soft); font-size: 13px; }
+nav { display: flex; gap: 6px; margin-bottom: 20px; }
+.tab {
+  font: inherit; font-weight: 500; font-size: 14px;
+  background: transparent; color: var(--ink-soft);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 16px; cursor: pointer;
+}
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tab:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+.tab .count {
+  font-family: "IBM Plex Mono", monospace; font-size: 12px;
+  background: var(--out); color: #fff; border-radius: 999px;
+  padding: 0 6px; margin-left: 4px;
+}
+.searchbox {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px 16px; box-shadow: var(--shadow); margin-bottom: 8px;
+}
+.searchbox svg { flex: none; color: var(--ink-soft); }
+.searchbox input {
+  flex: 1; border: 0; background: transparent; color: var(--ink);
+  font: inherit; font-size: 18px;
+}
+.searchbox input:focus { outline: none; }
+.hint { color: var(--ink-soft); font-size: 13px; margin: 0 4px 16px; }
+.section-label {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 20px 4px 8px;
+}
+.list { display: flex; flex-direction: column; gap: 8px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; box-shadow: var(--shadow);
+}
+.row-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.item-name { font-weight: 600; font-size: 17px; }
+.locate {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  font-family: "IBM Plex Mono", monospace; font-size: 13.5px;
+  color: var(--ink); margin-top: 4px;
+}
+.locate .seg { background: var(--surface-2); border-radius: 6px; padding: 2px 8px; }
+.locate .arrow { color: var(--ink-soft); }
+.meta { color: var(--ink-soft); font-size: 13px; margin-top: 6px; }
+.row-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.qty {
+  display: inline-flex; align-items: center; gap: 0;
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+}
+.qty button {
+  font: inherit; font-size: 16px; width: 34px; height: 32px;
+  border: 0; background: var(--surface-2); color: var(--ink); cursor: pointer;
+}
+.qty button:hover { background: var(--accent-soft); }
+.qty .n {
+  font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;
+  font-weight: 600; min-width: 44px; text-align: center;
+}
+.chip {
+  font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600;
+  border-radius: 999px; padding: 3px 10px; white-space: nowrap; flex: none;
+}
+.chip.ok { background: var(--accent-soft); color: var(--accent); }
+.chip.low { background: var(--low-soft); color: var(--low); }
+.chip.out { background: var(--out-soft); color: var(--out); }
+.btn {
+  font: inherit; font-size: 14px; font-weight: 500;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--ink);
+  padding: 6px 12px; cursor: pointer;
+}
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--out); }
+.btn.amazon { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.empty {
+  text-align: center; color: var(--ink-soft); padding: 36px 16px;
+  border: 1px dashed var(--line); border-radius: 12px; font-size: 14px;
+}
+form.editor { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+form.editor .full { grid-column: 1 / -1; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+input, select, textarea {
+  font: inherit; font-size: 15px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; width: 100%;
+}
+textarea { resize: vertical; min-height: 60px; }
+.form-actions { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+.note { font-size: 13px; color: var(--ink-soft); }
+.banner {
+  background: var(--out-soft); color: var(--out); border-radius: 10px;
+  padding: 10px 14px; font-size: 14px; font-weight: 500; margin-bottom: 14px;
+}
+.banner.ok { background: var(--accent-soft); color: var(--accent); }
+.share { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); }
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--paper); border-radius: 10px;
+  padding: 10px 18px; font-size: 14px; box-shadow: var(--shadow);
+  opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 10;
+}
+.toast.show { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+@media (max-width: 520px) { form.editor { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="wordmark">Kept<span>.</span></div>
+      <div class="tagline">Everything he owns. Exactly where it is.</div>
+    </div>
+  </header>
+
+  <nav role="tablist" aria-label="Views">
+    <button class="tab" role="tab" id="tab-find" aria-selected="true" data-view="find">Find</button>
+    <button class="tab" role="tab" id="tab-restock" aria-selected="false" data-view="restock">Restock<span class="count" id="restock-count" hidden></span></button>
+    <button class="tab" role="tab" id="tab-add" aria-selected="false" data-view="add">Add item</button>
+  </nav>
+
+  <!-- FIND VIEW -->
+  <section id="view-find">
+    <div class="searchbox">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+      <input id="search" type="search" placeholder="Where is… (try &quot;batteries&quot;)" autocomplete="off" aria-label="Search belongings">
+    </div>
+    <p class="hint">Type what you're looking for — you'll get the exact spot and how many are there.</p>
+    <div id="results" class="list" aria-live="polite"></div>
+  </section>
+
+  <!-- RESTOCK VIEW -->
+  <section id="view-restock" hidden>
+    <div id="restock-banner"></div>
+    <div id="restock-list" class="list"></div>
+    <div class="row-actions" style="margin-top:14px">
+      <button class="btn amazon" id="order-all" hidden>Add all to one Amazon cart</button>
+    </div>
+    <p class="hint" style="margin-top:14px">Anything that hits zero lands here automatically. Items with an Amazon product link get a one-click cart; everything else gets an Amazon search for that item.</p>
+  </section>
+
+  <!-- ADD / EDIT VIEW -->
+  <section id="view-add" hidden>
+    <form class="editor" id="editor" autocomplete="off">
+      <input type="hidden" id="f-id">
+      <label class="full">Item name
+        <input id="f-name" required placeholder="AA batteries">
+      </label>
+      <label>Room / area
+        <input id="f-room" required list="rooms" placeholder="Garage">
+      </label>
+      <label>Exact spot
+        <input id="f-spot" required placeholder="Shelf 3, blue bin">
+      </label>
+      <label>Quantity
+        <input id="f-qty" type="number" min="0" step="1" value="1" required>
+      </label>
+      <label>Reorder when at or below
+        <input id="f-min" type="number" min="0" step="1" value="0">
+      </label>
+      <label class="full">Amazon link or ASIN <span style="font-weight:400">(optional — enables one-click reorder)</span>
+        <input id="f-amazon" placeholder="https://www.amazon.com/dp/B00MNV8E0C or B00MNV8E0C">
+      </label>
+      <label class="full">Notes
+        <textarea id="f-notes" placeholder="Brand, size, anything that helps find or reorder it"></textarea>
+      </label>
+      <div class="form-actions">
+        <button class="btn primary" type="submit" id="f-save">Save item</button>
+        <button class="btn" type="button" id="f-cancel" hidden>Cancel</button>
+        <span class="note" id="f-mode"></span>
+      </div>
+    </form>
+    <datalist id="rooms"></datalist>
+  </section>
+
+  <div class="share">
+    <span class="note">Share with the team:</span>
+    <button class="btn" id="export">Export inventory file</button>
+    <button class="btn" id="import">Import inventory file</button>
+    <input type="file" id="import-file" accept="application/json" hidden>
+    <label style="flex-direction:row;align-items:center;gap:6px;margin-left:auto">Your name
+      <input id="editor-name" placeholder="e.g. Sam" style="width:110px">
+    </label>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+  var STORE_KEY = "kept-inventory-v1";
+  var NAME_KEY = "kept-editor-name";
+
+  var SEED = [
+    { name: "AA batteries", room: "Garage", spot: "Shelf 3, blue bin", qty: 8, min: 4, amazon: "", notes: "Energizer preferred" },
+    { name: "Passport", room: "Home office", spot: "Desk, top drawer, red folder", qty: 1, min: 0, amazon: "", notes: "" },
+    { name: "Printer paper", room: "Home office", spot: "Cabinet under printer", qty: 0, min: 1, amazon: "", notes: "Letter size, 500-sheet ream" },
+    { name: "Coffee pods", room: "Kitchen", spot: "Pantry, second shelf", qty: 12, min: 6, amazon: "", notes: "Medium roast" }
+  ];
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) return JSON.parse(raw).items || [];
+    } catch (e) { /* storage unavailable — run in-memory */ }
+    return SEED.map(function (s) { return finishItem(s); });
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ version: 1, items: items })); }
+    catch (e) { /* storage unavailable — keep in-memory only */ }
+  }
+  function getName() {
+    try { return localStorage.getItem(NAME_KEY) || ""; } catch (e) { return ""; }
+  }
+  function setName(v) {
+    try { localStorage.setItem(NAME_KEY, v); } catch (e) { /* ignore */ }
+  }
+  function finishItem(s) {
+    return {
+      id: s.id || ("i" + Math.random().toString(36).slice(2, 10)),
+      name: s.name, room: s.room || "", spot: s.spot || "",
+      qty: Math.max(0, s.qty | 0), min: Math.max(0, s.min | 0),
+      amazon: s.amazon || "", notes: s.notes || "",
+      updatedAt: s.updatedAt || new Date().toISOString(),
+      updatedBy: s.updatedBy || ""
+    };
+  }
+
+  var items = load();
+  save();
+
+  /* ---------- helpers ---------- */
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function status(it) {
+    if (it.qty === 0) return "out";
+    if (it.qty <= it.min) return "low";
+    return "ok";
+  }
+  function statusLabel(it) {
+    var s = status(it);
+    return s === "out" ? "OUT — 0 left" : s === "low" ? "LOW — " + it.qty + " left" : it.qty + " in stock";
+  }
+  function asinFrom(v) {
+    v = (v || "").trim();
+    if (/^[A-Z0-9]{10}$/i.test(v)) return v.toUpperCase();
+    var m = v.match(/\/(?:dp|gp\/product|product)\/([A-Z0-9]{10})/i);
+    return m ? m[1].toUpperCase() : "";
+  }
+  function amazonUrl(it) {
+    var asin = asinFrom(it.amazon);
+    var wanted = Math.max(1, (it.min || 0) + 1 - it.qty);
+    if (asin) {
+      return "https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=" + asin + "&Quantity.1=" + wanted;
+    }
+    if (/^https?:\/\//i.test(it.amazon)) return it.amazon;
+    return "https://www.amazon.com/s?k=" + encodeURIComponent(it.name + " " + (it.notes || "").slice(0, 40));
+  }
+  function toast(msg) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+  function stamp(it) {
+    it.updatedAt = new Date().toISOString();
+    it.updatedBy = getName();
+  }
+  function timeAgo(iso) {
+    var d = Date.now() - new Date(iso).getTime();
+    var m = Math.round(d / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return m + "m ago";
+    var h = Math.round(m / 60);
+    if (h < 24) return h + "h ago";
+    return Math.round(h / 24) + "d ago";
+  }
+
+  /* ---------- rendering ---------- */
+  function cardHtml(it) {
+    var s = status(it);
+    var by = it.updatedBy ? " by " + esc(it.updatedBy) : "";
+    return '<div class="card" data-id="' + it.id + '">' +
+      '<div class="row-top"><div>' +
+        '<div class="item-name">' + esc(it.name) + '</div>' +
+        '<div class="locate"><span class="seg">' + esc(it.room) + '</span>' +
+          '<span class="arrow">→</span><span class="seg">' + esc(it.spot) + '</span></div>' +
+        (it.notes ? '<div class="meta">' + esc(it.notes) + '</div>' : "") +
+        '<div class="meta">Updated ' + timeAgo(it.updatedAt) + by + '</div>' +
+      '</div>' +
+      '<span class="chip ' + s + '">' + esc(statusLabel(it)) + '</span></div>' +
+      '<div class="row-actions">' +
+        '<span class="qty"><button type="button" data-act="dec" aria-label="Take one">−</button>' +
+        '<span class="n">' + it.qty + '</span>' +
+        '<button type="button" data-act="inc" aria-label="Add one">+</button></span>' +
+        (s !== "ok" ? '<a class="btn amazon" target="_blank" rel="noopener" href="' + esc(amazonUrl(it)) + '">Order on Amazon</a>' : "") +
+        '<button type="button" class="btn" data-act="edit">Edit</button>' +
+        '<button type="button" class="btn danger" data-act="del">Delete</button>' +
+      '</div></div>';
+  }
+
+  function renderFind() {
+    var q = $("search").value.trim().toLowerCase();
+    var box = $("results");
+    var pool = items.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    var out;
+    if (!q) {
+      out = pool;
+    } else {
+      var terms = q.split(/\s+/);
+      out = pool.map(function (it) {
+        var hay = (it.name + " " + it.room + " " + it.spot + " " + it.notes).toLowerCase();
+        var score = 0;
+        var all = terms.every(function (t) { return hay.indexOf(t) !== -1; });
+        if (!all) return null;
+        if (it.name.toLowerCase().indexOf(q) === 0) score += 3;
+        else if (it.name.toLowerCase().indexOf(q) !== -1) score += 2;
+        return { it: it, score: score };
+      }).filter(Boolean).sort(function (a, b) { return b.score - a.score; })
+        .map(function (r) { return r.it; });
+    }
+    if (out.length === 0) {
+      box.innerHTML = '<div class="empty">' + (items.length === 0
+        ? "Nothing logged yet. Head to <strong>Add item</strong> to start the inventory."
+        : "No match for “" + esc(q) + "”. Try fewer words, or add it as a new item.") + '</div>';
+      return;
+    }
+    var label = q ? '<div class="section-label">' + out.length + (out.length === 1 ? " match" : " matches") + '</div>'
+                  : '<div class="section-label">All items · ' + out.length + '</div>';
+    box.innerHTML = label + out.map(cardHtml).join("");
+  }
+
+  function renderRestock() {
+    var need = items.filter(function (it) { return status(it) !== "ok"; })
+      .sort(function (a, b) { return a.qty - b.qty; });
+    var n = need.length;
+    var badge = $("restock-count");
+    badge.hidden = n === 0;
+    badge.textContent = n;
+    $("restock-banner").innerHTML = n === 0
+      ? '<div class="banner ok">Fully stocked — nothing needs reordering.</div>'
+      : '<div class="banner">' + n + (n === 1 ? " item needs" : " items need") + ' reordering.</div>';
+    $("restock-list").innerHTML = n === 0 ? "" : need.map(cardHtml).join("");
+    var asins = need.map(function (it) { return { asin: asinFrom(it.amazon), n: Math.max(1, (it.min || 0) + 1 - it.qty) }; })
+      .filter(function (x) { return x.asin; });
+    var all = $("order-all");
+    if (asins.length > 1) {
+      all.hidden = false;
+      all.onclick = function () {
+        var qs = asins.map(function (x, i) { return "ASIN." + (i + 1) + "=" + x.asin + "&Quantity." + (i + 1) + "=" + x.n; }).join("&");
+        window.open("https://www.amazon.com/gp/aws/cart/add.html?" + qs, "_blank", "noopener");
+      };
+    } else {
+      all.hidden = true;
+    }
+  }
+
+  function renderRooms() {
+    var seen = {};
+    $("rooms").innerHTML = items.map(function (it) { return it.room; })
+      .filter(function (r) { if (!r || seen[r]) return false; seen[r] = 1; return true; })
+      .map(function (r) { return "<option value=\"" + esc(r) + "\"></option>"; }).join("");
+  }
+
+  function renderAll() {
+    renderFind();
+    renderRestock();
+    renderRooms();
+  }
+
+  /* ---------- views ---------- */
+  var tabs = document.querySelectorAll(".tab");
+  function show(view) {
+    tabs.forEach(function (t) { t.setAttribute("aria-selected", String(t.dataset.view === view)); });
+    ["find", "restock", "add"].forEach(function (v) { $("view-" + v).hidden = v !== view; });
+    if (view === "find") $("search").focus();
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { show(t.dataset.view); });
+  });
+
+  /* ---------- item actions ---------- */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    var card = btn.closest(".card");
+    var it = items.find(function (x) { return x.id === card.dataset.id; });
+    if (!it) return;
+    var act = btn.dataset.act;
+    if (act === "inc" || act === "dec") {
+      var was = status(it);
+      it.qty = Math.max(0, it.qty + (act === "inc" ? 1 : -1));
+      stamp(it);
+      save(); renderAll();
+      if (was === "ok" && status(it) !== "ok") {
+        toast("“" + it.name + "” added to the restock queue");
+      }
+    } else if (act === "edit") {
+      $("f-id").value = it.id;
+      $("f-name").value = it.name;
+      $("f-room").value = it.room;
+      $("f-spot").value = it.spot;
+      $("f-qty").value = it.qty;
+      $("f-min").value = it.min;
+      $("f-amazon").value = it.amazon;
+      $("f-notes").value = it.notes;
+      $("f-mode").textContent = "Editing “" + it.name + "”";
+      $("f-cancel").hidden = false;
+      show("add");
+      $("f-name").focus();
+    } else if (act === "del") {
+      if (confirm("Delete “" + it.name + "” from the inventory?")) {
+        items = items.filter(function (x) { return x.id !== it.id; });
+        save(); renderAll();
+        toast("Deleted “" + it.name + "”");
+      }
+    }
+  });
+
+  /* ---------- editor form ---------- */
+  function resetForm() {
+    $("editor").reset();
+    $("f-id").value = "";
+    $("f-qty").value = 1;
+    $("f-min").value = 0;
+    $("f-mode").textContent = "";
+    $("f-cancel").hidden = true;
+  }
+  $("f-cancel").addEventListener("click", function () { resetForm(); show("find"); });
+  $("editor").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var id = $("f-id").value;
+    var data = {
+      name: $("f-name").value.trim(),
+      room: $("f-room").value.trim(),
+      spot: $("f-spot").value.trim(),
+      qty: Math.max(0, parseInt($("f-qty").value, 10) || 0),
+      min: Math.max(0, parseInt($("f-min").value, 10) || 0),
+      amazon: $("f-amazon").value.trim(),
+      notes: $("f-notes").value.trim()
+    };
+    if (!data.name) return;
+    if (id) {
+      var it = items.find(function (x) { return x.id === id; });
+      Object.assign(it, data);
+      stamp(it);
+      toast("Saved “" + it.name + "”");
+    } else {
+      var ni = finishItem(data);
+      stamp(ni);
+      items.push(ni);
+      toast("Added “" + ni.name + "”");
+    }
+    save(); renderAll(); resetForm();
+    show("find");
+  });
+
+  /* ---------- search ---------- */
+  $("search").addEventListener("input", renderFind);
+
+  /* ---------- share: export / import / name ---------- */
+  $("export").addEventListener("click", function () {
+    var blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), items: items }, null, 2)],
+      { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "kept-inventory.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    toast("Inventory exported — send the file to the team");
+  });
+  $("import").addEventListener("click", function () { $("import-file").click(); });
+  $("import-file").addEventListener("change", function () {
+    var f = this.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.items)) throw new Error("bad shape");
+        items = data.items.map(finishItem);
+        save(); renderAll();
+        toast("Imported " + items.length + " items");
+      } catch (err) {
+        toast("That file isn't a Kept inventory export");
+      }
+    };
+    reader.readAsText(f);
+    this.value = "";
+  });
+  var nameInput = $("editor-name");
+  nameInput.value = getName();
+  nameInput.addEventListener("change", function () { setName(nameInput.value.trim()); });
+
+  renderAll();
+  show("find");
+})();
+</script>
+</body>
+</html>
