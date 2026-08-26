@@ -1,9 +1,10 @@
-# 🧠 Brain Buddy — Chores & Rewards
+# 🧠 Brain Buddy — Tasks & Rewards
 
-A family chore app for **all ages — kids and adults**. Create chore lists, snap a photo
-when a chore is finished, and **AI (Claude vision) checks the photo** against what "done"
-should look like. Verified chores automatically credit rewards: **money 💵, points ⭐,
-and screen-time minutes 📱**.
+A household task app for **all ages — kids and adults**. Create task lists, snap a photo
+when a task is finished, and **AI (Claude vision) checks the photo** against what "done"
+should look like. Verified tasks automatically credit rewards: **money, points, and
+screen-time minutes**. The design is a modern, neutral product UI (with automatic
+dark mode) that works equally well for an adult's errand list and a kid's chore chart.
 
 Works on **desktop, iPhone, and Android** — it's a Progressive Web App (PWA), so it runs
 in any browser and can be installed to the home screen like a native app.
