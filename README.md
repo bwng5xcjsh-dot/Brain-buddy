@@ -1,4 +1,4 @@
-# 🧠 Brain Buddy — Tasks & Rewards
+# Tally — Tasks & Rewards
 
 A household task app for **all ages — kids and adults**. Create task lists, snap a photo
 when a task is finished, and **AI (Claude vision) checks the photo** against what "done"
@@ -111,7 +111,7 @@ sanctioned path is the **Family Controls / ManagedSettings framework**, which re
 - the app installed on the child's device with parent authorization.
 
 **Plan:** Phase 3 ships a small iOS companion app whose only job is to read the child's
-earned minutes from Brain Buddy and extend the daily limit accordingly. On Android, the
+earned minutes from Tally and extend the daily limit accordingly. On Android, the
 equivalent is a companion app using device-admin / Digital Wellbeing-style APIs, or
 integrating with parental-control platforms that offer partner APIs.
 

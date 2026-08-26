@@ -1,6 +1,6 @@
-// Brain Buddy service worker — app-shell caching so the app opens offline.
+// Tally service worker — app-shell caching so the app opens offline.
 // Photos and API calls are never cached.
-const CACHE = 'brainbuddy-v1';
+const CACHE = 'tally-v1';
 const SHELL = ['.', 'index.html', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => {
