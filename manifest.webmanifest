@@ -1,0 +1,13 @@
+{
+  "name": "Tally — Tasks & Rewards",
+  "short_name": "Tally",
+  "description": "Household task tracking with AI photo verification and rewards.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#F7F7F8",
+  "theme_color": "#4F46E5",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

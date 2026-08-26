@@ -1,2 +1,953 @@
-# Brain-buddy
-App for kids
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F7F7F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101014" media="(prefers-color-scheme: dark)">
+<title>Tally — Tasks &amp; Rewards</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tally">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #4F46E5;
+    --accent-strong: #4338CA;
+    --accent-soft: #EEF0FE;
+    --accent-text: #4338CA;
+    --green: #148A5C;
+    --green-soft: #E7F5EE;
+    --amber: #B45309;
+    --amber-soft: #FBF1E2;
+    --red: #C2363C;
+    --red-soft: #FBEBEC;
+    --blue: #175CD3;
+    --blue-soft: #EAF1FC;
+    --ink: #17181C;
+    --ink-soft: #5D616B;
+    --ink-faint: #8B8F99;
+    --bg: #F7F7F8;
+    --card: #FFFFFF;
+    --line: #E6E7EA;
+    --line-strong: #D8DADF;
+    --tile: #F1F1F4;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(16, 17, 20, .04), 0 4px 16px rgba(16, 17, 20, .04);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --accent: #7C7AF2;
+      --accent-strong: #918FF5;
+      --accent-soft: #26264A;
+      --accent-text: #A5A3F8;
+      --green: #4ADE97;
+      --green-soft: #12291E;
+      --amber: #F0B35C;
+      --amber-soft: #2C2113;
+      --red: #F2777C;
+      --red-soft: #321A1B;
+      --blue: #6EA8FE;
+      --blue-soft: #14243B;
+      --ink: #ECEDEF;
+      --ink-soft: #A2A5AD;
+      --ink-faint: #6E7178;
+      --bg: #101014;
+      --card: #1A1B20;
+      --line: #26272E;
+      --line-strong: #33343C;
+      --tile: #22232A;
+      --shadow: 0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  h1, h2, h3 { font-weight: 700; letter-spacing: -0.01em; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select, textarea {
+    font-family: inherit; font-size: 16px; color: var(--ink);
+    width: 100%; padding: 11px 13px; border: 1px solid var(--line-strong);
+    border-radius: 10px; background: var(--card); outline: none;
+    transition: border-color .12s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: var(--ink-faint); }
+  label { display: block; font-weight: 600; font-size: 13px; color: var(--ink-soft); margin: 16px 0 6px; }
+  .app { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  svg.ic { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 14px; }
+  .header .brand { display: flex; align-items: center; gap: 11px; }
+  .header .brand .logo {
+    width: 38px; height: 38px; border-radius: 10px; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header .brand .logo svg { width: 22px; height: 22px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .header .brand h1 { font-size: 17px; }
+  .header .brand small { display: block; font-size: 12.5px; color: var(--ink-faint); font-weight: 500; }
+
+  /* Member switcher */
+  .member-bar { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 16px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .member-bar::-webkit-scrollbar { display: none; }
+  .member-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 13px 7px 8px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line);
+    flex-shrink: 0; font-weight: 600; font-size: 13.5px; color: var(--ink-soft);
+    transition: border-color .12s, background .12s;
+  }
+  .member-chip .avatar {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--tile);
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+  }
+  .member-chip.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }
+
+  /* Cards */
+  .card {
+    background: var(--card); border-radius: var(--radius); border: 1px solid var(--line);
+    box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px;
+  }
+  .card h3 { font-size: 15.5px; margin-bottom: 2px; }
+  .muted { color: var(--ink-soft); font-size: 14px; }
+  .faint { color: var(--ink-faint); font-size: 12.5px; }
+
+  /* Task rows */
+  .task {
+    display: flex; align-items: center; gap: 13px;
+    background: var(--card); border-radius: var(--radius); border: 1px solid var(--line);
+    box-shadow: var(--shadow); padding: 13px 14px; margin-bottom: 9px;
+  }
+  .task .icon {
+    width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    background: var(--tile);
+  }
+  .task.done .icon { background: var(--green-soft); }
+  .task .info { flex: 1; min-width: 0; }
+  .task .title { font-weight: 600; font-size: 14.5px; }
+  .task.done .title { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+  .task .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; align-items: center; }
+  .pill {
+    font-size: 11.5px; font-weight: 600; padding: 2.5px 8px; border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 4px; border: 1px solid transparent;
+  }
+  .pill.money { background: var(--green-soft); color: var(--green); }
+  .pill.points { background: var(--accent-soft); color: var(--accent-text); }
+  .pill.screen { background: var(--blue-soft); color: var(--blue); }
+  .pill.status-pending { background: var(--amber-soft); color: var(--amber); }
+  .pill.status-verified { background: var(--green-soft); color: var(--green); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    font-weight: 600; font-size: 14.5px; padding: 12px 18px; border-radius: 11px;
+    background: var(--accent); color: #fff; transition: transform .08s, opacity .12s;
+  }
+  @media (prefers-color-scheme: dark) { .btn { color: #101014; } }
+  .btn:active { transform: scale(.98); }
+  .btn.small { padding: 8px 13px; font-size: 13px; border-radius: 9px; }
+  .btn.ghost { background: transparent; color: var(--accent-text); border: 1px solid var(--line-strong); }
+  .btn.green { background: var(--green); color: #fff; }
+  @media (prefers-color-scheme: dark) { .btn.green { color: #101014; } }
+  .btn.red-ghost { background: transparent; color: var(--red); border: 1px solid var(--line-strong); }
+  .btn.block { width: 100%; }
+  .btn[disabled] { opacity: .45; pointer-events: none; }
+
+  /* Stat tiles */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 16px; }
+  .stat {
+    background: var(--card); border-radius: var(--radius); border: 1px solid var(--line);
+    box-shadow: var(--shadow); padding: 13px 12px;
+  }
+  .stat .val { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: 11px; font-weight: 600; color: var(--ink-faint); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
+
+  /* Tabs */
+  .tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    background: var(--card); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around;
+    padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
+  }
+  .tabbar button {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 10.5px; font-weight: 600; color: var(--ink-faint);
+    padding: 5px 14px; border-radius: 10px; min-width: 64px; position: relative;
+  }
+  .tabbar button.active { color: var(--accent-text); }
+  .tabbar button svg { width: 21px; height: 21px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .tabbar .badge {
+    position: absolute; top: 0; right: 12px;
+    background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; padding: 0 4px;
+  }
+
+  /* Modal */
+  .modal-wrap {
+    position: fixed; inset: 0; z-index: 100; display: none;
+    background: rgba(10, 10, 14, .55); backdrop-filter: blur(3px);
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-wrap.open { display: flex; }
+  .modal {
+    background: var(--bg); width: 100%; max-width: 640px;
+    border-radius: 18px 18px 0 0; padding: 20px 18px calc(26px + env(safe-area-inset-bottom));
+    max-height: 92vh; overflow-y: auto; animation: slideup .2s ease;
+  }
+  @media (min-width: 560px) {
+    .modal-wrap { align-items: center; padding: 24px; }
+    .modal { border-radius: 18px; max-width: 460px; padding-bottom: 22px; }
+  }
+  @keyframes slideup { from { transform: translateY(32px); opacity: .5; } to { transform: none; opacity: 1; } }
+  .modal .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .modal .modal-head h2 { font-size: 18px; }
+  .modal .close-x { font-size: 18px; color: var(--ink-faint); padding: 6px 10px; }
+
+  .verify-box { text-align: center; padding: 16px 8px 6px; }
+  .verify-box h3 { font-size: 17px; margin-top: 14px; }
+  .status-ring {
+    width: 56px; height: 56px; border-radius: 50%; margin: 4px auto 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .status-ring svg { width: 28px; height: 28px; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .status-ring.ok { background: var(--green-soft); } .status-ring.ok svg { stroke: var(--green); }
+  .status-ring.warn { background: var(--amber-soft); } .status-ring.warn svg { stroke: var(--amber); }
+  .status-ring.err { background: var(--red-soft); } .status-ring.err svg { stroke: var(--red); }
+  .status-ring.info { background: var(--accent-soft); } .status-ring.info svg { stroke: var(--accent-text); }
+  .spinner {
+    width: 36px; height: 36px; margin: 10px auto; border-radius: 50%;
+    border: 3px solid var(--accent-soft); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 40px 16px; color: var(--ink-faint); font-size: 14px; }
+  .empty .empty-ic { width: 44px; height: 44px; border-radius: 12px; background: var(--tile); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
+  .empty .empty-ic svg { width: 22px; height: 22px; stroke: var(--ink-faint); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  .review-photo { width: 100%; border-radius: 11px; margin: 12px 0 10px; border: 1px solid var(--line); }
+  .row { display: flex; gap: 9px; }
+  .row > * { flex: 1; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 10px; }
+  .section-head h2 { font-size: 15px; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-size: 12.5px; }
+
+  .ledger-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-amt { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ledger-amt.earn { color: var(--green); }
+  .ledger-amt.redeem { color: var(--ink-faint); }
+
+  .banner {
+    border-radius: 11px; padding: 12px 14px; font-size: 13px; font-weight: 500;
+    margin-bottom: 14px; line-height: 1.5; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink-soft);
+  }
+  .banner b { color: var(--ink); }
+  .banner.warn { border-color: transparent; background: var(--amber-soft); color: var(--amber); }
+  .banner.warn b { color: inherit; }
+
+  .emoji-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
+  .emoji-grid button {
+    font-size: 20px; width: 42px; height: 42px; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--line-strong);
+  }
+  .emoji-grid button.sel { border-color: var(--accent); background: var(--accent-soft); }
+
+  .onboard { text-align: center; padding-top: 9vh; }
+  .onboard .logo-big {
+    width: 64px; height: 64px; border-radius: 16px; background: var(--accent);
+    margin: 0 auto 18px; display: flex; align-items: center; justify-content: center;
+  }
+  .onboard .logo-big svg { width: 36px; height: 36px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .onboard h1 { font-size: 26px; margin-bottom: 8px; letter-spacing: -0.02em; }
+  .onboard p { color: var(--ink-soft); font-size: 15px; max-width: 400px; margin: 0 auto 22px; line-height: 1.55; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="modal-wrap" id="modalWrap"><div class="modal" id="modalBody"></div></div>
+<div class="tabbar hidden" id="tabbar"></div>
+<input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
+
+<script>
+'use strict';
+
+/* ============================== State ============================== */
+
+const STORE_KEY = 'tally_v1';
+const LEGACY_STORE_KEY = 'brainbuddy_v1'; // pre-rename data, migrated on first load
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const TASK_ICONS = ['🧺','🛏️','🍽️','🐕','🗑️','🌱','🚿','📚','🧾','💼','📧','🏋️','🧽','🚗','🍳','📦'];
+const AVATARS = ['🙂','😄','😎','🧑','👩','👨','🧔','👱','🧓','🦊','🐼','🦁','🐸','🦉','🐱','🐶'];
+
+let state = load();
+let ui = {
+  tab: 'today',
+  activeMemberId: null,
+  parentUnlocked: false,
+  pendingChoreId: null, // task being completed via photo
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY) || localStorage.getItem(LEGACY_STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { console.warn('load failed', e); }
+  return {
+    household: null,
+    members: [],
+    chores: [],
+    completions: [],
+    ledger: [],
+    settings: { apiKey: '', model: 'claude-opus-5', parentPin: '' },
+  };
+}
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+/* ============================== Icons (inline SVG) ============================== */
+
+const I = {
+  logo: '<svg viewBox="0 0 24 24"><path d="M5 5v14M9.5 5v14M14 5v14M18.5 5v14" opacity=".9"/><path d="M2.5 17L21.5 7" stroke-width="2.4"/></svg>',
+  tasks: '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/></svg>',
+  gift: '<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M12 8v12"/><path d="M12 8s-4.5.2-4.5-2.3C7.5 3.8 10.5 3.6 12 8zM12 8s4.5.2 4.5-2.3C16.5 3.8 13.5 3.6 12 8z"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M9.5 12l1.8 1.8 3.4-3.6"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"/></svg>',
+  cross: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  send: '<svg viewBox="0 0 24 24"><path d="M4 12l16-7-4.5 14L11 14l-7-2z"/><path d="M11 14l9-9"/></svg>',
+  camera: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  sparkle: '<svg viewBox="0 0 24 24"><path d="M12 4l1.8 4.7L18.5 10l-4.7 1.8L12 16.5l-1.8-4.7L5.5 10l4.7-1.3L12 4z"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"/></svg>',
+};
+function statusRing(kind, icon) {
+  return `<div class="status-ring ${kind}">${I[icon]}</div>`;
+}
+
+/* ============================== Helpers ============================== */
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function member(id) { return state.members.find(m => m.id === id); }
+function chore(id) { return state.chores.find(c => c.id === id); }
+function activeMember() { return member(ui.activeMemberId) || state.members[0]; }
+
+function fmtMoney(n) { return '$' + (Number(n) || 0).toFixed(2).replace(/\.00$/, ''); }
+
+function balances(memberId) {
+  const b = { money: 0, points: 0, screenMin: 0 };
+  for (const e of state.ledger) {
+    if (e.memberId !== memberId) continue;
+    const sign = e.type === 'redeem' ? -1 : 1;
+    b.money += sign * (e.money || 0);
+    b.points += sign * (e.points || 0);
+    b.screenMin += sign * (e.screenMin || 0);
+  }
+  return b;
+}
+
+// A task is "due" for a member today if assigned to them, active, and not yet
+// verified/pending for the current period (day for daily, ISO week for weekly, ever for once).
+function periodKey(c, dateStr) {
+  if (c.schedule === 'daily') return dateStr;
+  if (c.schedule === 'weekly') {
+    const d = new Date(dateStr + 'T12:00:00');
+    const jan1 = new Date(d.getFullYear(), 0, 1);
+    const week = Math.ceil((((d - jan1) / 86400000) + jan1.getDay() + 1) / 7);
+    return d.getFullYear() + '-W' + week;
+  }
+  return 'once';
+}
+function completionFor(c, memberId) {
+  const pk = periodKey(c, todayKey());
+  return state.completions.find(x =>
+    x.choreId === c.id && x.memberId === memberId &&
+    x.periodKey === pk && (x.status === 'verified' || x.status === 'pending_review'));
+}
+function dueChores(memberId) {
+  return state.chores.filter(c => c.active && c.assigneeId === memberId);
+}
+function pendingReviews() {
+  return state.completions.filter(x => x.status === 'pending_review');
+}
+
+function credit(memberId, reward, note) {
+  state.ledger.unshift({
+    id: uid(), memberId, ts: Date.now(), type: 'earn',
+    money: reward.money || 0, points: reward.points || 0, screenMin: reward.screenMin || 0, note,
+  });
+}
+
+/* ============================== AI Verification ============================== */
+
+async function resizePhoto(file, maxDim, quality) {
+  const dataUrl = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = dataUrl;
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+// Calls the Claude API directly from the browser with the household's own key.
+// Returns { complete, confidence, feedback } or throws.
+async function verifyWithAI(photoDataUrl, c, m) {
+  const key = state.settings.apiKey;
+  const model = state.settings.model || 'claude-opus-5';
+  const base64 = photoDataUrl.split(',')[1];
+
+  const prompt =
+`You are the verification assistant in a household task app used by both adults and kids. A member submitted a photo as proof that they finished a task. Decide whether the photo genuinely shows the task was completed and done reasonably well.
+
+Task: ${c.title}
+Description: ${c.desc || '(none)'}
+What "done" looks like: ${c.criteria || 'Use your best judgment based on the task name.'}
+Done by: ${m.name} (${m.role === 'kid' ? 'a child — be warm and encouraging, use simple words' : 'an adult — be friendly and concise'})
+
+Be fair but not gullible: if the photo is unrelated, too dark/blurry to tell, or clearly shows the task NOT done, do not pass it. If it plausibly shows the task done, pass it.
+
+Reply with ONLY a JSON object, no other text:
+{"complete": true or false, "confidence": 0-100, "feedback": "1-2 sentences addressed to ${m.name} — acknowledge good work if done, or say specifically what still needs doing"}`;
+
+  const body = {
+    model,
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+        { type: 'text', text: prompt },
+      ],
+    }],
+  };
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': key,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true',
+  };
+  // Server-side refusal fallbacks are recommended for Opus 5 requests.
+  if (model === 'claude-opus-5') {
+    headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
+    body.fallbacks = 'default';
+  }
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST', headers, body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err?.error?.message || ('API error ' + resp.status));
+  }
+  const data = await resp.json();
+  if (data.stop_reason === 'refusal') throw new Error('The AI declined to review this photo.');
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Could not read the AI verdict.');
+  const verdict = JSON.parse(match[0]);
+  return {
+    complete: !!verdict.complete,
+    confidence: Math.max(0, Math.min(100, Number(verdict.confidence) || 0)),
+    feedback: String(verdict.feedback || ''),
+  };
+}
+
+/* ============================== Completion flow ============================== */
+
+function startChore(choreId) {
+  ui.pendingChoreId = choreId;
+  const c = chore(choreId);
+  if (c.photoRequired === false) {
+    submitCompletion(null);
+    return;
+  }
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoInput').click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('photoInput').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !ui.pendingChoreId) return;
+    await submitCompletion(file);
+  });
+});
+
+async function submitCompletion(file) {
+  const c = chore(ui.pendingChoreId);
+  const m = activeMember();
+  if (!c || !m) return;
+
+  let photoLarge = null, photoThumb = null;
+  if (file) {
+    openModal(`<div class="verify-box">${statusRing('info','camera')}<div class="spinner"></div><h3>Preparing photo…</h3></div>`, false);
+    try {
+      photoLarge = await resizePhoto(file, 1024, 0.8);
+      photoThumb = await resizePhoto(file, 420, 0.7);
+    } catch (err) {
+      openModal(`<div class="verify-box">${statusRing('err','cross')}<h3>Couldn't read that photo</h3><p class="muted" style="margin-top:6px">Please try again.</p><button class="btn block" style="margin-top:18px" onclick="closeModal()">OK</button></div>`);
+      return;
+    }
+  }
+
+  const completion = {
+    id: uid(), choreId: c.id, memberId: m.id,
+    periodKey: periodKey(c, todayKey()), date: todayKey(), ts: Date.now(),
+    photo: photoThumb, status: 'pending_review', aiVerdict: null,
+  };
+
+  const hasKey = !!state.settings.apiKey;
+  if (photoLarge && hasKey) {
+    openModal(`<div class="verify-box">${statusRing('info','sparkle')}<div class="spinner"></div><h3>Verifying…</h3><p class="muted" style="margin-top:6px">Checking your photo of “${esc(c.title)}”</p></div>`, false);
+    try {
+      const verdict = await verifyWithAI(photoLarge, c, m);
+      completion.aiVerdict = verdict;
+      if (verdict.complete && verdict.confidence >= 60) {
+        completion.status = 'verified';
+        credit(m.id, c.reward, c.title);
+        state.completions.unshift(completion); save(); render();
+        openModal(`<div class="verify-box">${statusRing('ok','check')}<h3>Verified</h3>
+          <p class="muted" style="margin:8px 0 14px">${esc(verdict.feedback)}</p>
+          <div style="justify-content:center;display:flex;gap:6px;flex-wrap:wrap">${rewardPills(c.reward)}</div>
+          <button class="btn green block" style="margin-top:18px" onclick="closeModal()">Done</button></div>`);
+      } else if (verdict.complete) {
+        // AI thinks it's done but isn't confident — send to review.
+        state.completions.unshift(completion); save(); render();
+        openModal(`<div class="verify-box">${statusRing('warn','clock')}<h3>Sent for review</h3>
+          <p class="muted" style="margin:8px 0 14px">${esc(verdict.feedback)}<br><br>The AI wasn't fully sure, so this one goes to the review queue.</p>
+          <button class="btn block" onclick="closeModal()">OK</button></div>`);
+      } else {
+        completion.status = 'rejected';
+        state.completions.unshift(completion); save(); render();
+        openModal(`<div class="verify-box">${statusRing('err','cross')}<h3>Not verified yet</h3>
+          <p class="muted" style="margin:8px 0 14px">${esc(verdict.feedback)}</p>
+          <button class="btn block" onclick="closeModal()">Got it</button></div>`);
+      }
+      return;
+    } catch (err) {
+      // Fall through to manual review on any API failure.
+      completion.aiVerdict = { complete: false, confidence: 0, feedback: 'AI check unavailable: ' + err.message };
+    }
+  }
+
+  state.completions.unshift(completion); save(); render();
+  openModal(`<div class="verify-box">${statusRing('info','send')}<h3>Sent for review</h3>
+    <p class="muted" style="margin:8px 0 14px">${hasKey && photoLarge ? 'The AI check didn’t go through, so “' : '“'}${esc(c.title)}” is in the review queue. Rewards are added once it's approved.</p>
+    <button class="btn block" onclick="closeModal()">OK</button></div>`);
+}
+
+function approveCompletion(id, ok) {
+  const x = state.completions.find(v => v.id === id);
+  if (!x) return;
+  if (ok) {
+    x.status = 'verified';
+    const c = chore(x.choreId);
+    if (c) credit(x.memberId, c.reward, c.title + ' (approved)');
+  } else {
+    x.status = 'rejected';
+  }
+  save(); render();
+}
+
+/* ============================== Redeem ============================== */
+
+function redeem(memberId, kind) {
+  const m = member(memberId);
+  const b = balances(memberId);
+  const labels = { money: 'money', points: 'points', screenMin: 'screen time' };
+  const max = kind === 'money' ? b.money : kind === 'points' ? b.points : b.screenMin;
+  if (max <= 0) return;
+  openModal(`
+    <div class="modal-head"><h2>Redeem ${labels[kind]}</h2><button class="close-x" onclick="closeModal()">✕</button></div>
+    <p class="muted">${esc(m.name)} has <b>${kind === 'money' ? fmtMoney(max) : Math.round(max) + (kind === 'screenMin' ? ' min' : ' pts')}</b> available.</p>
+    <label>Amount to redeem</label>
+    <input type="number" id="redeemAmt" min="0" step="${kind === 'money' ? '0.25' : '1'}" value="${kind === 'money' ? max.toFixed(2) : Math.round(max)}">
+    <label>Note (what was it for?)</label>
+    <input type="text" id="redeemNote" placeholder="${kind === 'money' ? 'e.g. paid out in cash / sent to account' : kind === 'screenMin' ? 'e.g. added to device screen time' : 'e.g. traded for a reward'}">
+    <button class="btn block" style="margin-top:18px" onclick="doRedeem('${memberId}','${kind}')">Redeem</button>`);
+}
+function doRedeem(memberId, kind) {
+  const amt = Math.max(0, Number(document.getElementById('redeemAmt').value) || 0);
+  const note = document.getElementById('redeemNote').value.trim() || 'Redeemed';
+  if (amt <= 0) { closeModal(); return; }
+  const entry = { id: uid(), memberId, ts: Date.now(), type: 'redeem', money: 0, points: 0, screenMin: 0, note };
+  if (kind === 'money') entry.money = amt;
+  else if (kind === 'points') entry.points = amt;
+  else entry.screenMin = amt;
+  state.ledger.unshift(entry); save(); closeModal(); render();
+}
+
+/* ============================== Rendering ============================== */
+
+function rewardPills(r) {
+  let h = '';
+  if (r.money > 0) h += `<span class="pill money">${fmtMoney(r.money)}</span>`;
+  if (r.points > 0) h += `<span class="pill points">${r.points} pts</span>`;
+  if (r.screenMin > 0) h += `<span class="pill screen">${r.screenMin} min</span>`;
+  return h || '<span class="pill points">No reward</span>';
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const tabbar = document.getElementById('tabbar');
+  if (!state.household || state.members.length === 0) {
+    tabbar.classList.add('hidden');
+    app.innerHTML = renderOnboarding();
+    return;
+  }
+  if (!ui.activeMemberId) ui.activeMemberId = state.members[0].id;
+  tabbar.classList.remove('hidden');
+  renderTabbar();
+
+  let body = '';
+  if (ui.tab === 'today') body = renderToday();
+  else if (ui.tab === 'rewards') body = renderRewards();
+  else if (ui.tab === 'parent') body = ui.parentUnlocked || !state.settings.parentPin ? renderParent() : renderPinGate();
+  app.innerHTML = renderHeader() + renderMemberBar() + body;
+}
+
+function renderHeader() {
+  return `<div class="header">
+    <div class="brand"><span class="logo">${I.logo}</span><div><h1>Tally</h1><small>${esc(state.household.name)}</small></div></div>
+  </div>`;
+}
+
+function renderMemberBar() {
+  return `<div class="member-bar">` + state.members.map(m => `
+    <button class="member-chip ${m.id === ui.activeMemberId ? 'active' : ''}" onclick="switchMember('${m.id}')">
+      <span class="avatar">${m.emoji}</span><span class="name">${esc(m.name)}</span>
+    </button>`).join('') + `</div>`;
+}
+function switchMember(id) { ui.activeMemberId = id; render(); }
+
+function renderTabbar() {
+  const n = pendingReviews().length;
+  document.getElementById('tabbar').innerHTML = `
+    <button class="${ui.tab === 'today' ? 'active' : ''}" onclick="setTab('today')">${I.tasks}Tasks</button>
+    <button class="${ui.tab === 'rewards' ? 'active' : ''}" onclick="setTab('rewards')">${I.gift}Rewards</button>
+    <button class="${ui.tab === 'parent' ? 'active' : ''}" onclick="setTab('parent')">
+      ${n ? `<span class="badge">${n}</span>` : ''}${I.shield}Manage</button>`;
+}
+function setTab(t) { ui.tab = t; render(); }
+
+/* ---------- Tasks (Today) ---------- */
+function renderToday() {
+  const m = activeMember();
+  const chores = dueChores(m.id);
+  const b = balances(m.id);
+  let rows = '';
+  for (const c of chores) {
+    const done = completionFor(c, m.id);
+    const status = done ? (done.status === 'verified'
+      ? '<span class="pill status-verified">Done</span>'
+      : '<span class="pill status-pending">In review</span>') : '';
+    rows += `<div class="task ${done && done.status === 'verified' ? 'done' : ''}">
+      <div class="icon">${c.icon || '🧺'}</div>
+      <div class="info">
+        <div class="title">${esc(c.title)}</div>
+        <div class="meta">${rewardPills(c.reward)} ${status}</div>
+      </div>
+      ${done ? '' : `<button class="btn small" onclick="startChore('${c.id}')">${c.photoRequired === false ? 'Mark done' : 'Verify'}</button>`}
+    </div>`;
+  }
+  if (!chores.length) rows = `<div class="empty"><div class="empty-ic">${I.tasks}</div>No tasks assigned to ${esc(m.name)} yet.<br>Add some in the Manage tab.</div>`;
+
+  return `
+    <div class="stats">
+      <div class="stat"><div class="val" style="color:var(--green)">${fmtMoney(b.money)}</div><div class="lbl">Earned</div></div>
+      <div class="stat"><div class="val" style="color:var(--accent-text)">${Math.round(b.points)}</div><div class="lbl">Points</div></div>
+      <div class="stat"><div class="val" style="color:var(--blue)">${Math.round(b.screenMin)}<span style="font-size:13px;font-weight:600">m</span></div><div class="lbl">Screen time</div></div>
+    </div>
+    <div class="section-head"><h2>${esc(m.name)}'s tasks</h2></div>
+    ${rows}`;
+}
+
+/* ---------- Rewards ---------- */
+function renderRewards() {
+  const m = activeMember();
+  const b = balances(m.id);
+  const entries = state.ledger.filter(e => e.memberId === m.id).slice(0, 30);
+  const hist = entries.map(e => {
+    const parts = [];
+    if (e.money) parts.push(fmtMoney(e.money));
+    if (e.points) parts.push(Math.round(e.points) + ' pts');
+    if (e.screenMin) parts.push(Math.round(e.screenMin) + ' min');
+    return `<div class="ledger-row">
+      <div><b style="font-weight:600">${esc(e.note)}</b><div class="faint">${new Date(e.ts).toLocaleDateString()}</div></div>
+      <div class="ledger-amt ${e.type}">${e.type === 'redeem' ? '−' : '+'}${parts.join(' · ')}</div>
+    </div>`;
+  }).join('') || `<div class="empty"><div class="empty-ic">${I.gift}</div>Complete tasks to start earning.</div>`;
+
+  return `
+    <div class="stats">
+      <div class="stat"><div class="val" style="color:var(--green)">${fmtMoney(b.money)}</div><div class="lbl">Money</div></div>
+      <div class="stat"><div class="val" style="color:var(--accent-text)">${Math.round(b.points)}</div><div class="lbl">Points</div></div>
+      <div class="stat"><div class="val" style="color:var(--blue)">${Math.round(b.screenMin)}<span style="font-size:13px;font-weight:600">m</span></div><div class="lbl">Screen time</div></div>
+    </div>
+    <div class="row">
+      <button class="btn ghost small" onclick="redeem('${m.id}','money')" ${b.money <= 0 ? 'disabled' : ''}>Cash out</button>
+      <button class="btn ghost small" onclick="redeem('${m.id}','points')" ${b.points <= 0 ? 'disabled' : ''}>Spend points</button>
+      <button class="btn ghost small" onclick="redeem('${m.id}','screenMin')" ${b.screenMin <= 0 ? 'disabled' : ''}>Use time</button>
+    </div>
+    <div class="section-head"><h2>History</h2></div>
+    <div class="card">${hist}</div>
+    <p class="faint" style="margin:4px 4px 16px">Cash-outs and screen-time grants are applied by an admin today (e.g. in Apple Screen Time or a bank transfer). Automatic account integrations are on the roadmap — see the project README.</p>`;
+}
+
+/* ---------- Manage ---------- */
+function renderPinGate() {
+  return `<div class="card" style="text-align:center;padding:28px">
+    <div class="empty-ic" style="margin:0 auto 12px">${I.shield}</div>
+    <h3 style="margin-bottom:4px">Admin access</h3>
+    <p class="muted" style="margin-bottom:14px">Enter the admin PIN to manage tasks and settings</p>
+    <input type="password" inputmode="numeric" id="pinTry" style="text-align:center;font-size:20px;letter-spacing:6px" maxlength="8">
+    <button class="btn block" style="margin-top:14px" onclick="tryPin()">Unlock</button></div>`;
+}
+function tryPin() {
+  if (document.getElementById('pinTry').value === state.settings.parentPin) { ui.parentUnlocked = true; render(); }
+  else document.getElementById('pinTry').value = '';
+}
+
+function renderParent() {
+  const reviews = pendingReviews();
+  const reviewHtml = reviews.map(x => {
+    const c = chore(x.choreId), m = member(x.memberId);
+    if (!c || !m) return '';
+    return `<div class="card">
+      <h3>${c.icon || '🧺'} ${esc(c.title)}</h3>
+      <p class="muted">${m.emoji} ${esc(m.name)} · ${new Date(x.ts).toLocaleString()}</p>
+      ${x.photo ? `<img class="review-photo" src="${x.photo}" alt="Task photo">` : '<p class="faint" style="margin:8px 0">No photo (honor system task)</p>'}
+      ${x.aiVerdict ? `<p class="muted" style="margin-bottom:12px"><b style="font-weight:600">AI note:</b> ${esc(x.aiVerdict.feedback)} <span class="faint">(confidence ${x.aiVerdict.confidence}%)</span></p>` : ''}
+      <div class="row">
+        <button class="btn green small" onclick="approveCompletion('${x.id}', true)">Approve &amp; reward</button>
+        <button class="btn red-ghost small" onclick="approveCompletion('${x.id}', false)">Not done</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const choresHtml = state.chores.filter(c => c.active).map(c => {
+    const m = member(c.assigneeId);
+    return `<div class="task">
+      <div class="icon">${c.icon || '🧺'}</div>
+      <div class="info">
+        <div class="title">${esc(c.title)}</div>
+        <div class="faint" style="margin-top:2px">${m ? m.emoji + ' ' + esc(m.name) : 'Unassigned'} · ${c.schedule} · ${c.photoRequired === false ? 'honor system' : 'photo-verified'}</div>
+        <div class="meta">${rewardPills(c.reward)}</div>
+      </div>
+      <button class="btn ghost small" onclick="editChore('${c.id}')">Edit</button>
+    </div>`;
+  }).join('') || `<div class="empty"><div class="empty-ic">${I.tasks}</div>No tasks yet — add your first one.</div>`;
+
+  const hasKey = !!state.settings.apiKey;
+  return `
+    ${hasKey ? '' : `<div class="banner warn"><b>AI photo verification is off.</b> Add your Anthropic API key in Settings below and finished-task photos will be verified automatically. Until then, everything goes to your review queue.</div>`}
+    <div class="section-head"><h2>Review queue ${reviews.length ? `(${reviews.length})` : ''}</h2></div>
+    ${reviewHtml || '<div class="card"><p class="muted">Nothing waiting for review.</p></div>'}
+    <div class="section-head"><h2>Tasks</h2><button class="btn small" onclick="editChore(null)">+ New task</button></div>
+    ${choresHtml}
+    <div class="section-head"><h2>Household</h2><button class="btn small" onclick="editMember(null)">+ Add member</button></div>
+    ${state.members.map(m => `<div class="task">
+      <div class="icon">${m.emoji}</div>
+      <div class="info"><div class="title">${esc(m.name)}</div><div class="faint">${m.role}</div></div>
+      <button class="btn ghost small" onclick="editMember('${m.id}')">Edit</button>
+    </div>`).join('')}
+    <div class="section-head"><h2>Settings</h2></div>
+    <div class="card">
+      <label style="margin-top:0">Anthropic API key (stored only on this device)</label>
+      <input type="password" id="setKey" value="${esc(state.settings.apiKey)}" placeholder="sk-ant-...">
+      <p class="faint" style="margin-top:6px">Get one at console.anthropic.com → API keys. The key never leaves this device except to call the Claude API directly.</p>
+      <label>AI model</label>
+      <select id="setModel">
+        <option value="claude-opus-5" ${state.settings.model === 'claude-opus-5' ? 'selected' : ''}>Claude Opus 5 — most capable (default)</option>
+        <option value="claude-sonnet-5" ${state.settings.model === 'claude-sonnet-5' ? 'selected' : ''}>Claude Sonnet 5 — cheaper per check</option>
+        <option value="claude-haiku-4-5" ${state.settings.model === 'claude-haiku-4-5' ? 'selected' : ''}>Claude Haiku 4.5 — cheapest</option>
+      </select>
+      <label>Admin PIN (optional, locks this tab)</label>
+      <input type="password" inputmode="numeric" id="setPin" value="${esc(state.settings.parentPin)}" placeholder="e.g. 4 digits" maxlength="8">
+      <button class="btn block" style="margin-top:18px" onclick="saveSettings()">Save settings</button>
+    </div>
+    <div class="banner"><b>Roadmap:</b> automatic screen-time granting (Apple Family Controls / Google Family Link) and real allowance transfers (banking APIs) require a native companion app and partner accounts — see README.md in the project for the integration plan.</div>`;
+}
+
+function saveSettings() {
+  state.settings.apiKey = document.getElementById('setKey').value.trim();
+  state.settings.model = document.getElementById('setModel').value;
+  state.settings.parentPin = document.getElementById('setPin').value.trim();
+  save(); render();
+  openModal(`<div class="verify-box">${statusRing('ok','check')}<h3>Settings saved</h3><button class="btn block" style="margin-top:16px" onclick="closeModal()">OK</button></div>`);
+}
+
+/* ---------- Task editor ---------- */
+let editingEmoji = '🧺';
+function editChore(id) {
+  const c = id ? chore(id) : null;
+  editingEmoji = c ? (c.icon || '🧺') : '🧺';
+  openModal(`
+    <div class="modal-head"><h2>${c ? 'Edit task' : 'New task'}</h2><button class="close-x" onclick="closeModal()">✕</button></div>
+    <label>Icon</label>
+    <div class="emoji-grid" id="iconGrid">${TASK_ICONS.map(e =>
+      `<button class="${e === editingEmoji ? 'sel' : ''}" onclick="pickIcon(this,'${e}')">${e}</button>`).join('')}</div>
+    <label>Task name</label>
+    <input id="chTitle" value="${c ? esc(c.title) : ''}" placeholder="e.g. Make the bed">
+    <label>What does “done” look like? (the AI uses this to check the photo)</label>
+    <textarea id="chCriteria" rows="2" placeholder="e.g. Blanket pulled flat, pillows at the top, nothing on the floor next to the bed">${c ? esc(c.criteria || '') : ''}</textarea>
+    <label>Assign to</label>
+    <select id="chAssignee">${state.members.map(m =>
+      `<option value="${m.id}" ${c && c.assigneeId === m.id ? 'selected' : ''}>${m.emoji} ${esc(m.name)}</option>`).join('')}</select>
+    <label>Repeats</label>
+    <select id="chSchedule">
+      <option value="daily" ${c && c.schedule === 'daily' ? 'selected' : ''}>Every day</option>
+      <option value="weekly" ${c && c.schedule === 'weekly' ? 'selected' : ''}>Every week</option>
+      <option value="once" ${c && c.schedule === 'once' ? 'selected' : ''}>One time</option>
+    </select>
+    <label>Proof</label>
+    <select id="chPhoto">
+      <option value="yes" ${!c || c.photoRequired !== false ? 'selected' : ''}>Photo required (AI-verified)</option>
+      <option value="no" ${c && c.photoRequired === false ? 'selected' : ''}>Honor system (admin approves)</option>
+    </select>
+    <label>Rewards</label>
+    <div class="row">
+      <div><span class="faint">Money ($)</span><input type="number" id="chMoney" min="0" step="0.25" value="${c ? c.reward.money || 0 : 1}"></div>
+      <div><span class="faint">Points</span><input type="number" id="chPoints" min="0" step="1" value="${c ? c.reward.points || 0 : 10}"></div>
+      <div><span class="faint">Screen (min)</span><input type="number" id="chScreen" min="0" step="5" value="${c ? c.reward.screenMin || 0 : 0}"></div>
+    </div>
+    <button class="btn block" style="margin-top:20px" onclick="saveChore('${id || ''}')">${c ? 'Save changes' : 'Add task'}</button>
+    ${c ? `<button class="btn red-ghost block" style="margin-top:10px" onclick="deleteChore('${id}')">Delete task</button>` : ''}`);
+}
+function pickIcon(btn, e) {
+  editingEmoji = e;
+  document.querySelectorAll('#iconGrid button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function saveChore(id) {
+  const title = document.getElementById('chTitle').value.trim();
+  if (!title) return;
+  const data = {
+    title,
+    icon: editingEmoji,
+    criteria: document.getElementById('chCriteria').value.trim(),
+    desc: '',
+    assigneeId: document.getElementById('chAssignee').value,
+    schedule: document.getElementById('chSchedule').value,
+    photoRequired: document.getElementById('chPhoto').value === 'yes',
+    reward: {
+      money: Math.max(0, Number(document.getElementById('chMoney').value) || 0),
+      points: Math.max(0, Number(document.getElementById('chPoints').value) || 0),
+      screenMin: Math.max(0, Number(document.getElementById('chScreen').value) || 0),
+    },
+  };
+  if (id) Object.assign(chore(id), data);
+  else state.chores.push({ id: uid(), active: true, createdAt: Date.now(), ...data });
+  save(); closeModal(); render();
+}
+function deleteChore(id) {
+  const c = chore(id);
+  if (c) c.active = false;
+  save(); closeModal(); render();
+}
+
+/* ---------- Member editor ---------- */
+let editingAvatar = '🙂';
+function editMember(id) {
+  const m = id ? member(id) : null;
+  editingAvatar = m ? m.emoji : AVATARS[state.members.length % AVATARS.length];
+  openModal(`
+    <div class="modal-head"><h2>${m ? 'Edit member' : 'Add household member'}</h2><button class="close-x" onclick="closeModal()">✕</button></div>
+    <label>Avatar</label>
+    <div class="emoji-grid" id="avGrid">${AVATARS.map(e =>
+      `<button class="${e === editingAvatar ? 'sel' : ''}" onclick="pickAvatar(this,'${e}')">${e}</button>`).join('')}</div>
+    <label>Name</label>
+    <input id="mName" value="${m ? esc(m.name) : ''}" placeholder="e.g. Sam">
+    <label>Role</label>
+    <select id="mRole">
+      <option value="kid" ${!m || m.role === 'kid' ? 'selected' : ''}>Kid</option>
+      <option value="adult" ${m && m.role === 'adult' ? 'selected' : ''}>Adult</option>
+      <option value="parent" ${m && m.role === 'parent' ? 'selected' : ''}>Parent / admin</option>
+    </select>
+    <button class="btn block" style="margin-top:20px" onclick="saveMember('${id || ''}')">${m ? 'Save' : 'Add member'}</button>`);
+}
+function pickAvatar(btn, e) {
+  editingAvatar = e;
+  document.querySelectorAll('#avGrid button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function saveMember(id) {
+  const name = document.getElementById('mName').value.trim();
+  if (!name) return;
+  const role = document.getElementById('mRole').value;
+  if (id) Object.assign(member(id), { name, role, emoji: editingAvatar });
+  else state.members.push({ id: uid(), name, role, emoji: editingAvatar });
+  save(); closeModal(); render();
+}
+
+/* ---------- Onboarding ---------- */
+function renderOnboarding() {
+  return `<div class="onboard">
+    <div class="logo-big">${I.logo}</div>
+    <h1>Tally</h1>
+    <p>Shared tasks for the whole household — kids and adults. Snap a photo when something's done, AI verifies it, and rewards are credited automatically.</p>
+    <div class="card" style="text-align:left;max-width:420px;margin:0 auto">
+      <label style="margin-top:0">Household name</label>
+      <input id="obHouse" placeholder="e.g. The Johnsons">
+      <label>Your name (you'll be the first admin)</label>
+      <input id="obName" placeholder="e.g. Alex">
+      <button class="btn block" style="margin-top:18px" onclick="finishOnboarding()">Get started</button>
+    </div>
+  </div>`;
+}
+function finishOnboarding() {
+  const house = document.getElementById('obHouse').value.trim() || 'My Household';
+  const name = document.getElementById('obName').value.trim() || 'Admin';
+  state.household = { name: house, createdAt: Date.now() };
+  state.members.push({ id: uid(), name, role: 'parent', emoji: '🙂' });
+  ui.activeMemberId = state.members[0].id;
+  ui.tab = 'parent';
+  save(); render();
+}
+
+/* ---------- Modal ---------- */
+function openModal(html, dismissable = true) {
+  const wrap = document.getElementById('modalWrap');
+  document.getElementById('modalBody').innerHTML = html;
+  wrap.classList.add('open');
+  wrap.onclick = dismissable ? (e => { if (e.target === wrap) closeModal(); }) : null;
+}
+function closeModal() { document.getElementById('modalWrap').classList.remove('open'); }
+
+/* ---------- Boot ---------- */
+render();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
