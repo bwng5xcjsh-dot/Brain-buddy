@@ -1,2 +1,879 @@
-# Brain-buddy
-App for kids
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#6C4DF4">
+<title>Brain Buddy — Chores &amp; Rewards</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Brain Buddy">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #6C4DF4;
+    --purple-dark: #5438d0;
+    --purple-soft: #EFEAFE;
+    --green: #22B573;
+    --green-soft: #E3F7EE;
+    --amber: #F5A623;
+    --amber-soft: #FDF3E0;
+    --red: #E5484D;
+    --red-soft: #FDECEC;
+    --blue: #2E90FA;
+    --blue-soft: #E8F2FE;
+    --ink: #1F2333;
+    --ink-soft: #5B6178;
+    --ink-faint: #9AA0B5;
+    --bg: #F6F6FB;
+    --card: #FFFFFF;
+    --line: #E7E8F0;
+    --radius: 16px;
+    --shadow: 0 2px 10px rgba(31, 35, 51, 0.07);
+    --font-display: 'Fredoka', system-ui, sans-serif;
+    --font-body: 'Nunito', system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select, textarea {
+    font-family: inherit; font-size: 16px; color: var(--ink);
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--line);
+    border-radius: 12px; background: var(--card); outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--purple); }
+  label { display: block; font-weight: 700; font-size: 13px; color: var(--ink-soft); margin: 14px 0 6px; }
+  .app { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0 12px;
+  }
+  .header .brand { display: flex; align-items: center; gap: 10px; }
+  .header .brand .logo { font-size: 30px; }
+  .header .brand h1 { font-size: 22px; color: var(--purple); }
+  .header .brand small { display: block; font-size: 12px; color: var(--ink-faint); font-family: var(--font-body); font-weight: 700; }
+
+  /* Member switcher */
+  .member-bar { display: flex; gap: 10px; overflow-x: auto; padding: 6px 0 14px; -webkit-overflow-scrolling: touch; }
+  .member-chip {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 62px; padding: 8px 6px; border-radius: 14px;
+    background: var(--card); border: 2px solid var(--line); box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+  .member-chip.active { border-color: var(--purple); background: var(--purple-soft); }
+  .member-chip .avatar { font-size: 26px; }
+  .member-chip .name { font-size: 12px; font-weight: 800; color: var(--ink-soft); max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .member-chip.active .name { color: var(--purple-dark); }
+
+  /* Cards */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px;
+  }
+  .card h3 { font-size: 17px; margin-bottom: 4px; }
+  .muted { color: var(--ink-soft); font-size: 14px; }
+  .faint { color: var(--ink-faint); font-size: 12.5px; }
+
+  /* Chore rows */
+  .chore {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 14px; margin-bottom: 10px;
+  }
+  .chore .icon {
+    width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+    background: var(--purple-soft);
+  }
+  .chore.done .icon { background: var(--green-soft); }
+  .chore .info { flex: 1; min-width: 0; }
+  .chore .title { font-weight: 800; font-size: 15px; }
+  .chore.done .title { text-decoration: line-through; color: var(--ink-faint); }
+  .chore .rewards { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .pill {
+    font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .pill.money { background: var(--green-soft); color: #157A4E; }
+  .pill.points { background: var(--purple-soft); color: var(--purple-dark); }
+  .pill.screen { background: var(--blue-soft); color: #1867C8; }
+  .pill.status-pending { background: var(--amber-soft); color: #B0731A; }
+  .pill.status-verified { background: var(--green-soft); color: #157A4E; }
+  .pill.status-rejected { background: var(--red-soft); color: #B93338; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-weight: 800; font-size: 15px; padding: 13px 18px; border-radius: 13px;
+    background: var(--purple); color: #fff; transition: transform .08s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.small { padding: 9px 14px; font-size: 13.5px; border-radius: 11px; }
+  .btn.ghost { background: var(--purple-soft); color: var(--purple-dark); }
+  .btn.green { background: var(--green); }
+  .btn.red-ghost { background: var(--red-soft); color: var(--red); }
+  .btn.block { width: 100%; }
+  .btn[disabled] { opacity: .5; pointer-events: none; }
+
+  /* Stat tiles */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px 10px; text-align: center;
+  }
+  .stat .val { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+  .stat .lbl { font-size: 11.5px; font-weight: 800; color: var(--ink-faint); margin-top: 2px; }
+  .stat.money .val { color: var(--green); }
+  .stat.points .val { color: var(--purple); }
+  .stat.screen .val { color: var(--blue); }
+
+  /* Tabs */
+  .tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    background: var(--card); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-around;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tabbar button {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 11px; font-weight: 800; color: var(--ink-faint);
+    padding: 4px 10px; border-radius: 10px; min-width: 58px;
+  }
+  .tabbar button.active { color: var(--purple); background: var(--purple-soft); }
+  .tabbar .tab-icon { font-size: 21px; }
+  .tabbar .badge {
+    position: absolute; transform: translate(14px, -4px);
+    background: var(--red); color: #fff; font-size: 10px; font-weight: 800;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; padding: 0 4px;
+  }
+
+  /* Modal */
+  .modal-wrap {
+    position: fixed; inset: 0; z-index: 100; display: none;
+    background: rgba(24, 20, 45, .5); backdrop-filter: blur(2px);
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-wrap.open { display: flex; }
+  .modal {
+    background: var(--bg); width: 100%; max-width: 640px;
+    border-radius: 22px 22px 0 0; padding: 18px 18px calc(24px + env(safe-area-inset-bottom));
+    max-height: 92vh; overflow-y: auto; animation: slideup .22s ease;
+  }
+  @keyframes slideup { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+  .modal .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .modal .modal-head h2 { font-size: 20px; }
+  .modal .close-x { font-size: 22px; color: var(--ink-faint); padding: 6px 10px; }
+
+  .photo-preview { width: 100%; border-radius: 14px; margin-top: 10px; display: block; }
+  .verify-box { text-align: center; padding: 18px 8px; }
+  .verify-box .big-emoji { font-size: 52px; }
+  .spinner {
+    width: 40px; height: 40px; margin: 12px auto; border-radius: 50%;
+    border: 4px solid var(--purple-soft); border-top-color: var(--purple);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 36px 16px; color: var(--ink-faint); }
+  .empty .big { font-size: 44px; margin-bottom: 8px; }
+
+  .review-photo { width: 100%; border-radius: 12px; margin: 10px 0; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
+  .section-head h2 { font-size: 18px; }
+
+  .ledger-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-amt { font-weight: 800; }
+  .ledger-amt.earn { color: var(--green); }
+  .ledger-amt.redeem { color: var(--red); }
+
+  .banner {
+    border-radius: 13px; padding: 12px 14px; font-size: 13.5px; font-weight: 700;
+    margin-bottom: 14px; line-height: 1.45;
+  }
+  .banner.info { background: var(--blue-soft); color: #1867C8; }
+  .banner.warn { background: var(--amber-soft); color: #9A6413; }
+
+  .emoji-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .emoji-grid button {
+    font-size: 24px; width: 46px; height: 46px; border-radius: 12px;
+    background: var(--card); border: 2px solid var(--line);
+  }
+  .emoji-grid button.sel { border-color: var(--purple); background: var(--purple-soft); }
+
+  .onboard { text-align: center; padding-top: 8vh; }
+  .onboard .logo-big { font-size: 74px; }
+  .onboard h1 { font-size: 30px; color: var(--purple); margin: 8px 0 6px; }
+  .onboard p { color: var(--ink-soft); font-size: 15.5px; max-width: 420px; margin: 0 auto 18px; line-height: 1.5; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="modal-wrap" id="modalWrap"><div class="modal" id="modalBody"></div></div>
+<div class="tabbar hidden" id="tabbar"></div>
+<input type="file" accept="image/*" capture="environment" id="photoInput" class="hidden">
+
+<script>
+'use strict';
+
+/* ============================== State ============================== */
+
+const STORE_KEY = 'brainbuddy_v1';
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const CHORE_ICONS = ['🧹','🛏️','🍽️','🐕','🗑️','🧺','📚','🌱','🚿','🧸','🚗','🍳','🪥','👟','💻','📦'];
+const AVATARS = ['🦁','🐼','🦊','🐸','🦄','🐯','🐨','🦖','🐙','🦉','🐶','🐱','🧑','👩','👨','🧓'];
+
+let state = load();
+let ui = {
+  tab: 'today',
+  activeMemberId: null,
+  parentUnlocked: false,
+  pendingChoreId: null, // chore being completed via photo
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { console.warn('load failed', e); }
+  return {
+    household: null,
+    members: [],
+    chores: [],
+    completions: [],
+    ledger: [],
+    settings: { apiKey: '', model: 'claude-opus-5', parentPin: '' },
+  };
+}
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+
+/* ============================== Helpers ============================== */
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function member(id) { return state.members.find(m => m.id === id); }
+function chore(id) { return state.chores.find(c => c.id === id); }
+function activeMember() { return member(ui.activeMemberId) || state.members[0]; }
+
+function fmtMoney(n) { return '$' + (Number(n) || 0).toFixed(2).replace(/\.00$/, ''); }
+
+function balances(memberId) {
+  const b = { money: 0, points: 0, screenMin: 0 };
+  for (const e of state.ledger) {
+    if (e.memberId !== memberId) continue;
+    const sign = e.type === 'redeem' ? -1 : 1;
+    b.money += sign * (e.money || 0);
+    b.points += sign * (e.points || 0);
+    b.screenMin += sign * (e.screenMin || 0);
+  }
+  return b;
+}
+
+// A chore is "due" for a member today if assigned to them, active, and not yet
+// verified/pending for the current period (day for daily, ISO week for weekly, ever for once).
+function periodKey(c, dateStr) {
+  if (c.schedule === 'daily') return dateStr;
+  if (c.schedule === 'weekly') {
+    const d = new Date(dateStr + 'T12:00:00');
+    const jan1 = new Date(d.getFullYear(), 0, 1);
+    const week = Math.ceil((((d - jan1) / 86400000) + jan1.getDay() + 1) / 7);
+    return d.getFullYear() + '-W' + week;
+  }
+  return 'once';
+}
+function completionFor(c, memberId) {
+  const pk = periodKey(c, todayKey());
+  return state.completions.find(x =>
+    x.choreId === c.id && x.memberId === memberId &&
+    x.periodKey === pk && (x.status === 'verified' || x.status === 'pending_review'));
+}
+function dueChores(memberId) {
+  return state.chores.filter(c => c.active && c.assigneeId === memberId);
+}
+function pendingReviews() {
+  return state.completions.filter(x => x.status === 'pending_review');
+}
+
+function credit(memberId, reward, note) {
+  state.ledger.unshift({
+    id: uid(), memberId, ts: Date.now(), type: 'earn',
+    money: reward.money || 0, points: reward.points || 0, screenMin: reward.screenMin || 0, note,
+  });
+}
+
+/* ============================== AI Verification ============================== */
+
+async function resizePhoto(file, maxDim, quality) {
+  const dataUrl = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = dataUrl;
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+// Calls the Claude API directly from the browser with the parent's own key.
+// Returns { complete, confidence, feedback } or throws.
+async function verifyWithAI(photoDataUrl, c, m) {
+  const key = state.settings.apiKey;
+  const model = state.settings.model || 'claude-opus-5';
+  const base64 = photoDataUrl.split(',')[1];
+
+  const prompt =
+`You are the friendly verification assistant in a family chore app. A household member submitted a photo as proof that they finished a chore. Decide whether the photo genuinely shows the chore was completed and done reasonably well.
+
+Chore: ${c.title}
+Description: ${c.desc || '(none)'}
+What "done" looks like: ${c.criteria || 'Use your best judgment based on the chore name.'}
+Done by: ${m.name} (${m.role === 'kid' ? 'a child — be encouraging and use simple words' : 'an adult'})
+
+Be fair but not gullible: if the photo is unrelated, too dark/blurry to tell, or clearly shows the chore NOT done, do not pass it. If it plausibly shows the chore done, pass it.
+
+Reply with ONLY a JSON object, no other text:
+{"complete": true or false, "confidence": 0-100, "feedback": "1-2 friendly sentences addressed to ${m.name} — praise if done, or say specifically what still needs doing"}`;
+
+  const body = {
+    model,
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+        { type: 'text', text: prompt },
+      ],
+    }],
+  };
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': key,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true',
+  };
+  // Server-side refusal fallbacks are recommended for Opus 5 requests.
+  if (model === 'claude-opus-5') {
+    headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
+    body.fallbacks = 'default';
+  }
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST', headers, body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err?.error?.message || ('API error ' + resp.status));
+  }
+  const data = await resp.json();
+  if (data.stop_reason === 'refusal') throw new Error('The AI declined to review this photo.');
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Could not read the AI verdict.');
+  const verdict = JSON.parse(match[0]);
+  return {
+    complete: !!verdict.complete,
+    confidence: Math.max(0, Math.min(100, Number(verdict.confidence) || 0)),
+    feedback: String(verdict.feedback || ''),
+  };
+}
+
+/* ============================== Completion flow ============================== */
+
+function startChore(choreId) {
+  ui.pendingChoreId = choreId;
+  const c = chore(choreId);
+  if (c.photoRequired === false) {
+    submitCompletion(null);
+    return;
+  }
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoInput').click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('photoInput').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !ui.pendingChoreId) return;
+    await submitCompletion(file);
+  });
+});
+
+async function submitCompletion(file) {
+  const c = chore(ui.pendingChoreId);
+  const m = activeMember();
+  if (!c || !m) return;
+
+  let photoLarge = null, photoThumb = null;
+  if (file) {
+    openModal(`<div class="verify-box"><div class="big-emoji">📸</div><div class="spinner"></div><h3>Getting your photo ready…</h3></div>`, false);
+    try {
+      photoLarge = await resizePhoto(file, 1024, 0.8);
+      photoThumb = await resizePhoto(file, 420, 0.7);
+    } catch (err) {
+      openModal(`<div class="verify-box"><div class="big-emoji">😕</div><h3>Couldn't read that photo</h3><p class="muted">Please try again.</p><button class="btn block" onclick="closeModal()">OK</button></div>`);
+      return;
+    }
+  }
+
+  const completion = {
+    id: uid(), choreId: c.id, memberId: m.id,
+    periodKey: periodKey(c, todayKey()), date: todayKey(), ts: Date.now(),
+    photo: photoThumb, status: 'pending_review', aiVerdict: null,
+  };
+
+  const hasKey = !!state.settings.apiKey;
+  if (photoLarge && hasKey) {
+    openModal(`<div class="verify-box"><div class="big-emoji">🤖</div><div class="spinner"></div><h3>Buddy is checking your work…</h3><p class="muted">Looking at your photo of “${esc(c.title)}”</p></div>`, false);
+    try {
+      const verdict = await verifyWithAI(photoLarge, c, m);
+      completion.aiVerdict = verdict;
+      if (verdict.complete && verdict.confidence >= 60) {
+        completion.status = 'verified';
+        credit(m.id, c.reward, c.title);
+        state.completions.unshift(completion); save(); render();
+        openModal(`<div class="verify-box"><div class="big-emoji">🎉</div><h3>Verified — great job, ${esc(m.name)}!</h3>
+          <p class="muted" style="margin:8px 0 14px">${esc(verdict.feedback)}</p>
+          <div class="rewards" style="justify-content:center;display:flex;gap:6px;flex-wrap:wrap">${rewardPills(c.reward)}</div>
+          <button class="btn green block" style="margin-top:16px" onclick="closeModal()">Awesome!</button></div>`);
+      } else if (verdict.complete) {
+        // AI thinks it's done but isn't confident — send to parent.
+        state.completions.unshift(completion); save(); render();
+        openModal(`<div class="verify-box"><div class="big-emoji">🤔</div><h3>Almost there!</h3>
+          <p class="muted" style="margin:8px 0 14px">${esc(verdict.feedback)}<br><br>Buddy wasn't 100% sure, so a parent will take a quick look.</p>
+          <button class="btn block" onclick="closeModal()">OK</button></div>`);
+      } else {
+        completion.status = 'rejected';
+        state.completions.unshift(completion); save(); render();
+        openModal(`<div class="verify-box"><div class="big-emoji">💪</div><h3>Not quite done yet</h3>
+          <p class="muted" style="margin:8px 0 14px">${esc(verdict.feedback)}</p>
+          <button class="btn block" onclick="closeModal()">I'll finish it!</button></div>`);
+      }
+      return;
+    } catch (err) {
+      // Fall through to parent review on any API failure.
+      completion.aiVerdict = { complete: false, confidence: 0, feedback: 'AI check unavailable: ' + err.message };
+    }
+  }
+
+  state.completions.unshift(completion); save(); render();
+  openModal(`<div class="verify-box"><div class="big-emoji">📨</div><h3>Sent for review</h3>
+    <p class="muted" style="margin:8px 0 14px">${hasKey && photoLarge ? 'The AI check didn’t go through, so a' : 'A'} parent will review “${esc(c.title)}” and your rewards will be added once it's approved.</p>
+    <button class="btn block" onclick="closeModal()">OK</button></div>`);
+}
+
+function approveCompletion(id, ok) {
+  const x = state.completions.find(v => v.id === id);
+  if (!x) return;
+  if (ok) {
+    x.status = 'verified';
+    const c = chore(x.choreId);
+    if (c) credit(x.memberId, c.reward, c.title + ' (parent approved)');
+  } else {
+    x.status = 'rejected';
+  }
+  save(); render();
+}
+
+/* ============================== Redeem ============================== */
+
+function redeem(memberId, kind) {
+  const m = member(memberId);
+  const b = balances(memberId);
+  const labels = { money: 'money', points: 'points', screenMin: 'screen-time minutes' };
+  const max = kind === 'money' ? b.money : kind === 'points' ? b.points : b.screenMin;
+  if (max <= 0) return;
+  openModal(`
+    <div class="modal-head"><h2>Redeem ${labels[kind]}</h2><button class="close-x" onclick="closeModal()">✕</button></div>
+    <p class="muted">${esc(m.name)} has <b>${kind === 'money' ? fmtMoney(max) : Math.round(max)}</b> available.</p>
+    <label>Amount to redeem</label>
+    <input type="number" id="redeemAmt" min="0" step="${kind === 'money' ? '0.25' : '1'}" value="${kind === 'money' ? max.toFixed(2) : Math.round(max)}">
+    <label>Note (what was it for?)</label>
+    <input type="text" id="redeemNote" placeholder="${kind === 'money' ? 'e.g. paid out in cash / sent to account' : kind === 'screenMin' ? 'e.g. added to iPad screen time' : 'e.g. traded for a treat'}">
+    <button class="btn block" style="margin-top:16px" onclick="doRedeem('${memberId}','${kind}')">Redeem</button>`);
+}
+function doRedeem(memberId, kind) {
+  const amt = Math.max(0, Number(document.getElementById('redeemAmt').value) || 0);
+  const note = document.getElementById('redeemNote').value.trim() || 'Redeemed';
+  if (amt <= 0) { closeModal(); return; }
+  const entry = { id: uid(), memberId, ts: Date.now(), type: 'redeem', money: 0, points: 0, screenMin: 0, note };
+  if (kind === 'money') entry.money = amt;
+  else if (kind === 'points') entry.points = amt;
+  else entry.screenMin = amt;
+  state.ledger.unshift(entry); save(); closeModal(); render();
+}
+
+/* ============================== Rendering ============================== */
+
+function rewardPills(r) {
+  let h = '';
+  if (r.money > 0) h += `<span class="pill money">💵 ${fmtMoney(r.money)}</span>`;
+  if (r.points > 0) h += `<span class="pill points">⭐ ${r.points} pts</span>`;
+  if (r.screenMin > 0) h += `<span class="pill screen">📱 ${r.screenMin} min</span>`;
+  return h || '<span class="pill points">High five 🙌</span>';
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const tabbar = document.getElementById('tabbar');
+  if (!state.household || state.members.length === 0) {
+    tabbar.classList.add('hidden');
+    app.innerHTML = renderOnboarding();
+    return;
+  }
+  if (!ui.activeMemberId) ui.activeMemberId = state.members[0].id;
+  tabbar.classList.remove('hidden');
+  renderTabbar();
+
+  let body = '';
+  if (ui.tab === 'today') body = renderToday();
+  else if (ui.tab === 'rewards') body = renderRewards();
+  else if (ui.tab === 'parent') body = ui.parentUnlocked || !state.settings.parentPin ? renderParent() : renderPinGate();
+  app.innerHTML = renderHeader() + renderMemberBar() + body;
+}
+
+function renderHeader() {
+  return `<div class="header">
+    <div class="brand"><span class="logo">🧠</span><div><h1>Brain Buddy</h1><small>${esc(state.household.name)}</small></div></div>
+  </div>`;
+}
+
+function renderMemberBar() {
+  return `<div class="member-bar">` + state.members.map(m => `
+    <button class="member-chip ${m.id === ui.activeMemberId ? 'active' : ''}" onclick="switchMember('${m.id}')">
+      <span class="avatar">${m.emoji}</span><span class="name">${esc(m.name)}</span>
+    </button>`).join('') + `</div>`;
+}
+function switchMember(id) { ui.activeMemberId = id; render(); }
+
+function renderTabbar() {
+  const n = pendingReviews().length;
+  document.getElementById('tabbar').innerHTML = `
+    <button class="${ui.tab === 'today' ? 'active' : ''}" onclick="setTab('today')"><span class="tab-icon">✅</span>Today</button>
+    <button class="${ui.tab === 'rewards' ? 'active' : ''}" onclick="setTab('rewards')"><span class="tab-icon">🏆</span>Rewards</button>
+    <button class="${ui.tab === 'parent' ? 'active' : ''}" onclick="setTab('parent')" style="position:relative">
+      ${n ? `<span class="badge">${n}</span>` : ''}<span class="tab-icon">🛡️</span>Parent</button>`;
+}
+function setTab(t) { ui.tab = t; render(); }
+
+/* ---------- Today ---------- */
+function renderToday() {
+  const m = activeMember();
+  const chores = dueChores(m.id);
+  const b = balances(m.id);
+  let rows = '';
+  for (const c of chores) {
+    const done = completionFor(c, m.id);
+    const status = done ? (done.status === 'verified'
+      ? '<span class="pill status-verified">✔ Done</span>'
+      : '<span class="pill status-pending">⏳ Waiting for review</span>') : '';
+    rows += `<div class="chore ${done && done.status === 'verified' ? 'done' : ''}">
+      <div class="icon">${c.icon || '🧹'}</div>
+      <div class="info">
+        <div class="title">${esc(c.title)}</div>
+        <div class="rewards">${rewardPills(c.reward)} ${status}</div>
+      </div>
+      ${done ? '' : `<button class="btn small" onclick="startChore('${c.id}')">${c.photoRequired === false ? 'Done ✓' : '📸 Prove it!'}</button>`}
+    </div>`;
+  }
+  if (!chores.length) rows = `<div class="empty"><div class="big">🎈</div>No chores assigned to ${esc(m.name)} yet.<br>A parent can add some in the Parent tab.</div>`;
+
+  return `
+    <div class="stats">
+      <div class="stat money"><div class="val">${fmtMoney(b.money)}</div><div class="lbl">EARNED</div></div>
+      <div class="stat points"><div class="val">${Math.round(b.points)}</div><div class="lbl">POINTS</div></div>
+      <div class="stat screen"><div class="val">${Math.round(b.screenMin)}<span style="font-size:13px">m</span></div><div class="lbl">SCREEN TIME</div></div>
+    </div>
+    <div class="section-head"><h2>${esc(m.name)}'s chores</h2></div>
+    ${rows}`;
+}
+
+/* ---------- Rewards ---------- */
+function renderRewards() {
+  const m = activeMember();
+  const b = balances(m.id);
+  const entries = state.ledger.filter(e => e.memberId === m.id).slice(0, 30);
+  const hist = entries.map(e => {
+    const parts = [];
+    if (e.money) parts.push(fmtMoney(e.money));
+    if (e.points) parts.push(Math.round(e.points) + ' pts');
+    if (e.screenMin) parts.push(Math.round(e.screenMin) + ' min');
+    return `<div class="ledger-row">
+      <div><b>${esc(e.note)}</b><div class="faint">${new Date(e.ts).toLocaleDateString()}</div></div>
+      <div class="ledger-amt ${e.type}">${e.type === 'redeem' ? '−' : '+'}${parts.join(' · ')}</div>
+    </div>`;
+  }).join('') || `<div class="empty"><div class="big">🌟</div>Finish chores to start earning!</div>`;
+
+  return `
+    <div class="stats">
+      <div class="stat money"><div class="val">${fmtMoney(b.money)}</div><div class="lbl">MONEY</div></div>
+      <div class="stat points"><div class="val">${Math.round(b.points)}</div><div class="lbl">POINTS</div></div>
+      <div class="stat screen"><div class="val">${Math.round(b.screenMin)}<span style="font-size:13px">m</span></div><div class="lbl">SCREEN TIME</div></div>
+    </div>
+    <div class="row">
+      <button class="btn ghost small" onclick="redeem('${m.id}','money')" ${b.money <= 0 ? 'disabled' : ''}>💵 Cash out</button>
+      <button class="btn ghost small" onclick="redeem('${m.id}','points')" ${b.points <= 0 ? 'disabled' : ''}>⭐ Spend pts</button>
+      <button class="btn ghost small" onclick="redeem('${m.id}','screenMin')" ${b.screenMin <= 0 ? 'disabled' : ''}>📱 Use time</button>
+    </div>
+    <div class="section-head"><h2>History</h2></div>
+    <div class="card">${hist}</div>
+    <p class="faint" style="margin:4px 4px 16px">💡 Cashing out and granting screen time is done by a parent today (e.g. adding minutes in Apple Screen Time or transferring allowance). Automatic account integrations are on the roadmap — see the project README.</p>`;
+}
+
+/* ---------- Parent ---------- */
+function renderPinGate() {
+  return `<div class="card" style="text-align:center;padding:28px">
+    <div style="font-size:40px">🔒</div><h3 style="margin:8px 0">Parents only</h3>
+    <p class="muted" style="margin-bottom:12px">Enter the parent PIN</p>
+    <input type="password" inputmode="numeric" id="pinTry" style="text-align:center;font-size:22px;letter-spacing:6px" maxlength="8">
+    <button class="btn block" style="margin-top:14px" onclick="tryPin()">Unlock</button></div>`;
+}
+function tryPin() {
+  if (document.getElementById('pinTry').value === state.settings.parentPin) { ui.parentUnlocked = true; render(); }
+  else document.getElementById('pinTry').value = '';
+}
+
+function renderParent() {
+  const reviews = pendingReviews();
+  const reviewHtml = reviews.map(x => {
+    const c = chore(x.choreId), m = member(x.memberId);
+    if (!c || !m) return '';
+    return `<div class="card">
+      <h3>${c.icon || '🧹'} ${esc(c.title)}</h3>
+      <p class="muted">${m.emoji} ${esc(m.name)} · ${new Date(x.ts).toLocaleString()}</p>
+      ${x.photo ? `<img class="review-photo" src="${x.photo}" alt="Chore photo">` : '<p class="faint" style="margin:8px 0">No photo (photo not required for this chore)</p>'}
+      ${x.aiVerdict ? `<p class="muted" style="margin-bottom:10px">🤖 <b>Buddy says:</b> ${esc(x.aiVerdict.feedback)} <span class="faint">(confidence ${x.aiVerdict.confidence}%)</span></p>` : ''}
+      <div class="row">
+        <button class="btn green small" onclick="approveCompletion('${x.id}', true)">✔ Approve &amp; reward</button>
+        <button class="btn red-ghost small" onclick="approveCompletion('${x.id}', false)">✕ Not done</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const choresHtml = state.chores.filter(c => c.active).map(c => {
+    const m = member(c.assigneeId);
+    return `<div class="chore">
+      <div class="icon">${c.icon || '🧹'}</div>
+      <div class="info">
+        <div class="title">${esc(c.title)}</div>
+        <div class="faint">${m ? m.emoji + ' ' + esc(m.name) : 'Unassigned'} · ${c.schedule} ${c.photoRequired === false ? '· no photo' : '· 📸 AI-checked'}</div>
+        <div class="rewards">${rewardPills(c.reward)}</div>
+      </div>
+      <button class="btn ghost small" onclick="editChore('${c.id}')">Edit</button>
+    </div>`;
+  }).join('') || `<div class="empty"><div class="big">📝</div>No chores yet — add your first one!</div>`;
+
+  const hasKey = !!state.settings.apiKey;
+  return `
+    ${hasKey ? '' : `<div class="banner warn">🤖 <b>AI photo checking is off.</b> Add your Anthropic API key in Settings below and finished-chore photos will be verified automatically. Until then, everything goes to your review queue.</div>`}
+    <div class="section-head"><h2>Review queue ${reviews.length ? `(${reviews.length})` : ''}</h2></div>
+    ${reviewHtml || '<div class="card"><p class="muted">Nothing waiting for review. 🎉</p></div>'}
+    <div class="section-head"><h2>Chores</h2><button class="btn small" onclick="editChore(null)">+ Add chore</button></div>
+    ${choresHtml}
+    <div class="section-head"><h2>Family</h2><button class="btn small" onclick="editMember(null)">+ Add member</button></div>
+    ${state.members.map(m => `<div class="chore">
+      <div class="icon">${m.emoji}</div>
+      <div class="info"><div class="title">${esc(m.name)}</div><div class="faint">${m.role}</div></div>
+      <button class="btn ghost small" onclick="editMember('${m.id}')">Edit</button>
+    </div>`).join('')}
+    <div class="section-head"><h2>Settings</h2></div>
+    <div class="card">
+      <label>Anthropic API key (stored only on this device)</label>
+      <input type="password" id="setKey" value="${esc(state.settings.apiKey)}" placeholder="sk-ant-...">
+      <p class="faint" style="margin-top:6px">Get one at console.anthropic.com → API keys. The key never leaves this device except to call the Claude API directly.</p>
+      <label>AI model</label>
+      <select id="setModel">
+        <option value="claude-opus-5" ${state.settings.model === 'claude-opus-5' ? 'selected' : ''}>Claude Opus 5 — most capable (default)</option>
+        <option value="claude-sonnet-5" ${state.settings.model === 'claude-sonnet-5' ? 'selected' : ''}>Claude Sonnet 5 — cheaper per check</option>
+        <option value="claude-haiku-4-5" ${state.settings.model === 'claude-haiku-4-5' ? 'selected' : ''}>Claude Haiku 4.5 — cheapest</option>
+      </select>
+      <label>Parent PIN (optional, locks this tab)</label>
+      <input type="password" inputmode="numeric" id="setPin" value="${esc(state.settings.parentPin)}" placeholder="e.g. 4 digits" maxlength="8">
+      <button class="btn block" style="margin-top:16px" onclick="saveSettings()">Save settings</button>
+    </div>
+    <div class="banner info">🔗 <b>Roadmap:</b> automatic screen-time granting (Apple Family Controls / Google Family Link) and real allowance transfers (kids' debit card APIs) require a native companion app and partner accounts — see README.md in the project for the integration plan.</div>`;
+}
+
+function saveSettings() {
+  state.settings.apiKey = document.getElementById('setKey').value.trim();
+  state.settings.model = document.getElementById('setModel').value;
+  state.settings.parentPin = document.getElementById('setPin').value.trim();
+  save(); render();
+  openModal(`<div class="verify-box"><div class="big-emoji">✅</div><h3>Settings saved</h3><button class="btn block" style="margin-top:14px" onclick="closeModal()">OK</button></div>`);
+}
+
+/* ---------- Chore editor ---------- */
+let editingEmoji = '🧹';
+function editChore(id) {
+  const c = id ? chore(id) : null;
+  editingEmoji = c ? (c.icon || '🧹') : '🧹';
+  openModal(`
+    <div class="modal-head"><h2>${c ? 'Edit chore' : 'New chore'}</h2><button class="close-x" onclick="closeModal()">✕</button></div>
+    <label>Icon</label>
+    <div class="emoji-grid" id="iconGrid">${CHORE_ICONS.map(e =>
+      `<button class="${e === editingEmoji ? 'sel' : ''}" onclick="pickIcon(this,'${e}')">${e}</button>`).join('')}</div>
+    <label>Chore name</label>
+    <input id="chTitle" value="${c ? esc(c.title) : ''}" placeholder="e.g. Make your bed">
+    <label>What does “done” look like? (the AI uses this to check the photo)</label>
+    <textarea id="chCriteria" rows="2" placeholder="e.g. Blanket pulled flat, pillows at the top, nothing on the floor next to the bed">${c ? esc(c.criteria || '') : ''}</textarea>
+    <label>Assign to</label>
+    <select id="chAssignee">${state.members.map(m =>
+      `<option value="${m.id}" ${c && c.assigneeId === m.id ? 'selected' : ''}>${m.emoji} ${esc(m.name)}</option>`).join('')}</select>
+    <label>Repeats</label>
+    <select id="chSchedule">
+      <option value="daily" ${c && c.schedule === 'daily' ? 'selected' : ''}>Every day</option>
+      <option value="weekly" ${c && c.schedule === 'weekly' ? 'selected' : ''}>Every week</option>
+      <option value="once" ${c && c.schedule === 'once' ? 'selected' : ''}>One time</option>
+    </select>
+    <label>Proof</label>
+    <select id="chPhoto">
+      <option value="yes" ${!c || c.photoRequired !== false ? 'selected' : ''}>📸 Photo required (AI-checked)</option>
+      <option value="no" ${c && c.photoRequired === false ? 'selected' : ''}>Honor system (parent approves)</option>
+    </select>
+    <label>Rewards</label>
+    <div class="row">
+      <div><span class="faint">💵 Money ($)</span><input type="number" id="chMoney" min="0" step="0.25" value="${c ? c.reward.money || 0 : 1}"></div>
+      <div><span class="faint">⭐ Points</span><input type="number" id="chPoints" min="0" step="1" value="${c ? c.reward.points || 0 : 10}"></div>
+      <div><span class="faint">📱 Minutes</span><input type="number" id="chScreen" min="0" step="5" value="${c ? c.reward.screenMin || 0 : 0}"></div>
+    </div>
+    <button class="btn block" style="margin-top:18px" onclick="saveChore('${id || ''}')">${c ? 'Save changes' : 'Add chore'}</button>
+    ${c ? `<button class="btn red-ghost block" style="margin-top:10px" onclick="deleteChore('${id}')">Delete chore</button>` : ''}`);
+}
+function pickIcon(btn, e) {
+  editingEmoji = e;
+  document.querySelectorAll('#iconGrid button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function saveChore(id) {
+  const title = document.getElementById('chTitle').value.trim();
+  if (!title) return;
+  const data = {
+    title,
+    icon: editingEmoji,
+    criteria: document.getElementById('chCriteria').value.trim(),
+    desc: '',
+    assigneeId: document.getElementById('chAssignee').value,
+    schedule: document.getElementById('chSchedule').value,
+    photoRequired: document.getElementById('chPhoto').value === 'yes',
+    reward: {
+      money: Math.max(0, Number(document.getElementById('chMoney').value) || 0),
+      points: Math.max(0, Number(document.getElementById('chPoints').value) || 0),
+      screenMin: Math.max(0, Number(document.getElementById('chScreen').value) || 0),
+    },
+  };
+  if (id) Object.assign(chore(id), data);
+  else state.chores.push({ id: uid(), active: true, createdAt: Date.now(), ...data });
+  save(); closeModal(); render();
+}
+function deleteChore(id) {
+  const c = chore(id);
+  if (c) c.active = false;
+  save(); closeModal(); render();
+}
+
+/* ---------- Member editor ---------- */
+let editingAvatar = '🦁';
+function editMember(id) {
+  const m = id ? member(id) : null;
+  editingAvatar = m ? m.emoji : AVATARS[state.members.length % AVATARS.length];
+  openModal(`
+    <div class="modal-head"><h2>${m ? 'Edit member' : 'Add family member'}</h2><button class="close-x" onclick="closeModal()">✕</button></div>
+    <label>Avatar</label>
+    <div class="emoji-grid" id="avGrid">${AVATARS.map(e =>
+      `<button class="${e === editingAvatar ? 'sel' : ''}" onclick="pickAvatar(this,'${e}')">${e}</button>`).join('')}</div>
+    <label>Name</label>
+    <input id="mName" value="${m ? esc(m.name) : ''}" placeholder="e.g. Sam">
+    <label>Role</label>
+    <select id="mRole">
+      <option value="kid" ${!m || m.role === 'kid' ? 'selected' : ''}>Kid</option>
+      <option value="adult" ${m && m.role === 'adult' ? 'selected' : ''}>Adult</option>
+      <option value="parent" ${m && m.role === 'parent' ? 'selected' : ''}>Parent</option>
+    </select>
+    <button class="btn block" style="margin-top:18px" onclick="saveMember('${id || ''}')">${m ? 'Save' : 'Add member'}</button>`);
+}
+function pickAvatar(btn, e) {
+  editingAvatar = e;
+  document.querySelectorAll('#avGrid button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function saveMember(id) {
+  const name = document.getElementById('mName').value.trim();
+  if (!name) return;
+  const role = document.getElementById('mRole').value;
+  if (id) Object.assign(member(id), { name, role, emoji: editingAvatar });
+  else state.members.push({ id: uid(), name, role, emoji: editingAvatar });
+  save(); closeModal(); render();
+}
+
+/* ---------- Onboarding ---------- */
+function renderOnboarding() {
+  return `<div class="onboard">
+    <div class="logo-big">🧠</div>
+    <h1>Brain Buddy</h1>
+    <p>Chores for the whole family — snap a photo when you're done, and Buddy's AI checks your work and hands out the rewards. 💵 ⭐ 📱</p>
+    <div class="card" style="text-align:left;max-width:420px;margin:0 auto">
+      <label>Family / household name</label>
+      <input id="obHouse" placeholder="e.g. The Johnsons">
+      <label>Your name (you'll be the first parent)</label>
+      <input id="obName" placeholder="e.g. Alex">
+      <button class="btn block" style="margin-top:18px" onclick="finishOnboarding()">Let's go! 🚀</button>
+    </div>
+  </div>`;
+}
+function finishOnboarding() {
+  const house = document.getElementById('obHouse').value.trim() || 'My Family';
+  const name = document.getElementById('obName').value.trim() || 'Parent';
+  state.household = { name: house, createdAt: Date.now() };
+  state.members.push({ id: uid(), name, role: 'parent', emoji: '🧑' });
+  ui.activeMemberId = state.members[0].id;
+  ui.tab = 'parent';
+  save(); render();
+}
+
+/* ---------- Modal ---------- */
+function openModal(html, dismissable = true) {
+  const wrap = document.getElementById('modalWrap');
+  document.getElementById('modalBody').innerHTML = html;
+  wrap.classList.add('open');
+  wrap.onclick = dismissable ? (e => { if (e.target === wrap) closeModal(); }) : null;
+}
+function closeModal() { document.getElementById('modalWrap').classList.remove('open'); }
+
+/* ---------- Boot ---------- */
+render();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
